@@ -78,20 +78,12 @@
 
      ledge.body.immovable = true;
 
-     ledge = platforms.create (50, 0, 'ground');
+     ledge = platforms.create (0, 0, 'ground');
 
      ledge.body.immovable = true;
 
-     // ledge = platforms.create (-950, 350, 'ground');
-
-     // ledge.body.immovable = true;
-
-     // the order in which I add sprites matters!  If I want to add a background image to the game,
-     // then I need to create it before I create the star.
-     //game.add.sprite (0, 0, 'star');
-
      //the player and his settings
-     player = game.add.sprite (32, game.world.height - 150, 'dude');
+     player = game.add.sprite (game.world.width / 2, ground.height, 'dude');
 
      //we need to enable physics on the player
      game.physics.arcade.enable (player);

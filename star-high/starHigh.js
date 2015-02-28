@@ -61,8 +61,6 @@ function create () {
   ledges = game.add.group();
   //add physics to the group
   ledges.enableBody = true;
-  // create 20 pipes
-  ledges.createMultiple (20, 'ground');
 
   // Display the player on the screen
   //player = game.add.sprite (32, game.world.height - 150, 'dude');
@@ -213,11 +211,12 @@ function addNewRock () {  //help wanted
 //make 5 more ledges
 function make5Ledges () {
   //get the tallest sprite on the world
-  var tallestLedge = ledges.getFirstAlive ();
-  if (tallestLedge == null) {
-     heightOfTallestLedge = ground.height;
+  heightOfTallestLedge = ledges.getTop();
+  if (heightOfTallestLedge == null) {
+    //ground.position returns an object. We want y, the position of the image on the y-axis.
+    heightOfTallestLedge = ground.position.y;
   } else {
-    heightOfTallestLedge = tallestLedge.height;
+    heightOfTallestLedge = heightOfTallestLedge.position.y;
   }
   for (var i = 1; i < 6; i++) {
     // if this is the 3rd ledge, make sure that when the player touches it, we create 5 more ledges.
@@ -229,7 +228,7 @@ function make5Ledges () {
       //randomly assign a width to the ledge
       ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
       ledge.body.immovable = true;
-      heightOf3rdLedge = ledge.height;
+      heightOf3rdLedge = ledge.position.y;
       heightOfTallestLedge = heightOf3rdLedge;
     } else {
       //make the ledge be randomly put on the map...
@@ -237,7 +236,7 @@ function make5Ledges () {
       //randomly assign a width to the ledge
       ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
       ledge.body.immovable = true;
-      heightOfTallestLedge = ledge.height;
+      heightOfTallestLedge = ledge.position.y;
     }
   }
 //  game.physics.arcade.overlap (player, ledge, make5ledges, null, this);
