@@ -80,6 +80,8 @@ function create () {
 
   // ---------------------- Falling things --------------------------- //
 
+  make5Ledges ();
+
   // make stars its own group
   stars = game.add.group ();
 
@@ -87,7 +89,7 @@ function create () {
   stars.enableBody = true;
 
   //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-  starsTimer = game.time.events.loop(2000, addNewStar, this);
+  starsTimer = game.time.events.loop(1000, addNewStar, this);
 
   //make rocks its own group
   rocks = game.add.group ();
@@ -102,7 +104,6 @@ function create () {
 
   // ---------------------- Falling things --------------------------- //
 
-  make5Ledges ();
 
   scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
 
@@ -193,7 +194,7 @@ function addOneLedge (x, y, width) {
 }
 
 function addNewStar () {
-  star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.height - game.world.height * .9, 'star');
+  star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
   star.body.gravity.y = 300;
   star.checkWorldBounds = true;
   star.outOfBoundsKill = true;
