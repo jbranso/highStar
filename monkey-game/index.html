@@ -73,10 +73,18 @@
 
      ledge.body.immovable = true;
 
-     // this is the second ledge
-     ledge = platforms.create (-150, 250, 'ground');
+     //this is the first ledge
+     ledge = platforms.create (0, 250, 'ground');
 
      ledge.body.immovable = true;
+
+     // ledge = platforms.create (-250, 250, 'ground');
+
+     // ledge.body.immovable = true;
+
+     // ledge = platforms.create (-950, 350, 'ground');
+
+     // ledge.body.immovable = true;
 
      // the order in which I add sprites matters!  If I want to add a background image to the game,
      // then I need to create it before I create the star.
