@@ -79,7 +79,7 @@ function create () {
   //enable physics for this group
   stars.enableBody = true;
 
-  starsTimer = game.time.events.loop(1500, addNewStar);
+  starsTimer = game.time.events.loop(100, addNewStar);
 
   scoreText = game.add.text (16, 16, 'score:0', {fontSize: '32px', fill: '#000' });
 
@@ -89,6 +89,13 @@ function create () {
 function update () {
   //collide the player with the platforms
   game.physics.arcade.collide (player, platforms);
+  game.physics.arcade.overlap (player, stars, collectStar, null, this);
+
+  function collectStar (player, star) {
+    star.kill();
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+  }
 
   player.body.velocity.x = 0;
   if (cursors.left.isDown) {
@@ -129,7 +136,7 @@ function addOneLedge (x, y, width) {
 }
 
 function addNewStar () {
-  star = stars.create ( Math.floor (Math.random() * game.world.width ), Math.floor (Math.random() * game.world.height), 'star');
+  star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.height - game.world.height * .9, 'star');
   star.body.gravity.y = 300;
   star.checkWorldBounds = true;
   star.outOfBoundsKill = true;
