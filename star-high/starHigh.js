@@ -89,7 +89,7 @@ function create () {
   stars.enableBody = true;
 
   //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-  starsTimer = game.time.events.loop(500, addNewStar);
+  starsTimer = game.time.events.loop(2000, addNewStar, this);
 
   //make rocks its own group
   rocks = game.add.group ();
@@ -97,7 +97,7 @@ function create () {
   rocks.enableBody = true;
   //add a timer that will add a new rock and place it randomly on the screen
   //in the addNewRock, function, subtract 1 from the lives variable
-  rocksTimer = game.time.events.loop (600, addNewRock);
+  rocksTimer = game.time.events.loop (1000, addNewRock);
 
   //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
   //make a diamonds game.add, enableBody =true, and heartsTimer //help wanted
@@ -119,7 +119,10 @@ function update () {
   game.physics.arcade.collide (player, ledges);
   // I have to specify here when the player lands on the 3rd ledge, to spawn 5 more.
   if (player.height > heightOf3rdLedge ) {
-    make5Ledges ();
+    //This is really sloppy code.  My logic in make5Ledges does not work. This code just makes sure, that I do not spawn a ton of ledges.
+    if ( ledges.children.length < 6 ) {
+      make5Ledges ();
+    }
   }
 
   function collectStar (player, star) {
@@ -222,17 +225,19 @@ function make5Ledges () {
     // This means the player could spawn many many many ledges.
     if ( i == 3 ) {
       //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor (Math.random() * game.world.width), 050, 'ground');
+      ledge = ledges.create (Math.floor (Math.random() * game.world.width), heightOfTallestLedge - 150, 'ground');
       //randomly assign a width to the ledge
       ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
       ledge.body.immovable = true;
       heightOf3rdLedge = ledge.height;
+      heightOfTallestLedge = heightOf3rdLedge;
     } else {
       //make the ledge be randomly put on the map...
-      ledge = ledges.create (150, 250, 'ground');
+      ledge = ledges.create (Math.floor ( Math.random() * game.world.width / 2), heightOfTallestLedge - 150, 'ground');
       //randomly assign a width to the ledge
       ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
       ledge.body.immovable = true;
+      heightOfTallestLedge = ledge.height;
     }
   }
 //  game.physics.arcade.overlap (player, ledge, make5ledges, null, this);
