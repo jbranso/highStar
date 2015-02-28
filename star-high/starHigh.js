@@ -26,6 +26,7 @@ var sky;
 var score = 0;
 var scoreText;
 var ledges;
+var starsTimer;
 
 
 function create () {
@@ -78,9 +79,10 @@ function create () {
   //enable physics for this group
   stars.enableBody = true;
 
-  //create a
+  starsTimer = game.time.events.loop(1500, addNewStar);
 
   scoreText = game.add.text (16, 16, 'score:0', {fontSize: '32px', fill: '#000' });
+
 
 }
 
@@ -124,4 +126,11 @@ function addOneLedge (x, y, width) {
     ledge.outOfBoundsKill = true;
   }
 
+}
+
+function addNewStar () {
+  star = stars.create ( Math.floor (Math.random() * game.world.width ), Math.floor (Math.random() * game.world.height), 'star');
+  star.body.gravity.y = 300;
+  star.checkWorldBounds = true;
+  star.outOfBoundsKill = true;
 }
