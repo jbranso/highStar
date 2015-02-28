@@ -8,6 +8,8 @@ function preload () {
   game.load.image ( 'baddie', 'assets/baddie.png' );
   game.load.image ( 'heart',  'assets/heart.png' );
   game.load.image ( 'sky', 'assets/sky.png' );
+  game.load.image ( 'rock', 'assets/rock.png' );
+  game.load.image ( 'diamond', 'assets/diamond.png' );
 }
 
 var player;
@@ -27,16 +29,22 @@ var diamonds;
 var diamondsTimer;
 //the object that will record user input via the arrow keys
 var cursors;
-var lives = 0;
+var lives = 5;
 var scoreLives;
 var sky;
 var score = 0;
 var scoreText;
 //the many different ledges that will pop up and the player can move up in the game.
 var heightOfTallestLedge;
+var random; // this is the random number generator
+var randomLength;
 
 
 function create () {
+  //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
+  // game.world.setBounds(0, 0, game.world.width, 2000);
+  // game.camera.setPosition (0, 0);
+
   // Set the physics system
   game.physics.startSystem (Phaser.Physics.ARCADE);
 
@@ -62,14 +70,14 @@ function create () {
   //add physics to the group
   ledges.enableBody = true;
 
+  randomLength = [ Math.floor (game.width / 3), Math.floor (game.width / 4), Math.floor ( game.width / 5 ), ];
   // Display the player on the screen
   //player = game.add.sprite (32, game.world.height - 150, 'dude');
   player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
-  game.camera.follow(player);
   game.physics.arcade.enable (player);
 
   //how fast the player falls
-  player.body.gravity.y = 300;
+  player.body.gravity.y = 400;
   // if the player will collide with the world
   player.body.collideWorldBounds = true;
 
@@ -80,7 +88,25 @@ function create () {
 
   // ---------------------- Falling things --------------------------- //
 
-  make5Ledges ();
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 300, 'ground');
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 250, 'ground');
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 150, 'ground');
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 50, 'ground');
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 00, 'ground');
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
 
   // make stars its own group
   stars = game.add.group ();
@@ -91,23 +117,59 @@ function create () {
   //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
   starsTimer = game.time.events.loop(1000, addNewStar, this);
 
+  function addNewStar () {
+    star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
+    star.body.gravity.y = 300;
+    star.checkWorldBounds = true;
+    star.outOfBoundsKill = true;
+  }
+
   //make rocks its own group
   rocks = game.add.group ();
   //enable physics for the group
   rocks.enableBody = true;
   //add a timer that will add a new rock and place it randomly on the screen
   //in the addNewRock, function, subtract 1 from the lives variable
-  rocksTimer = game.time.events.loop (1000, addNewRock);
+  rocksTimer = game.time.events.loop (30000, addNewRock, this);
+
+  function addNewRock () {
+    rock = rocks.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'rock');
+    rock.body.gravity.y = 300;
+    rock.checkWorldBounds = true;
+    rock.outOfBoundsKill = true;
+  }
 
   //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
-  //make a diamonds game.add, enableBody =true, and heartsTimer //help wanted
+
+  hearts = game.add.group ();
+  hearts.enableBody = true ;
+  heartsTimer = game.time.events.loop (60000, addNewHeart, this);
+
+  function addNewHeart () {
+    heart = hearts.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'heart');
+    heart.body.gravity.y = 300;
+    heart.checkWorldBounds = true;
+    heart.outOfBoundsKill = true;
+  }
+
+  diamonds = game.add.group ();
+  diamonds.enableBody = true ;
+  diamondsTimer = game.time.events.loop (3000, addNewDiamond, this);
+
+  function addNewDiamond () {
+    diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'diamond');
+    diamond.body.gravity.y = 300;
+    diamond.checkWorldBounds = true;
+    diamond.outOfBoundsKill = true;
+  }
+
 
   // ---------------------- Falling things --------------------------- //
 
 
   scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
 
-  scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:0', {fontSize: '32px', fill: '#000' });
+  scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
 
 }
 
@@ -116,13 +178,9 @@ function update () {
   game.physics.arcade.collide (player, platforms);
   game.physics.arcade.overlap (player, stars, collectStar, null, this);
   game.physics.arcade.collide (player, ledges);
+  game.physics.arcade.overlap (player, rocks, collectRock, null, this);
+
   // I have to specify here when the player lands on the 3rd ledge, to spawn 5 more.
-  if (player.height > heightOf3rdLedge ) {
-    //This is really sloppy code.  My logic in make5Ledges does not work. This code just makes sure, that I do not spawn a ton of ledges.
-    if ( ledges.children.length < 6 ) {
-      make5Ledges ();
-    }
-  }
 
   function collectStar (player, star) {
     star.kill();
@@ -130,13 +188,35 @@ function update () {
     scoreText.text = 'Score: ' + score;
   }
 
-  //game.physics.arcade.overlap (player, rocks, collectRock, null, this);  //help wanted
+  game.physics.arcade.overlap (player, rocks, collectRock, null, this);
 
-  //collectRock  function () {} When the player hits a rock, he should lose a life  //help wanted
+  function collectRock (player, rock) {
+    rock.kill();
+    lives -= 1;
+    scoreLives.text = 'Lives: ' + lives;
+  }
 
-  //game.physics.arcade.overlay (player, hearts, collectHeart, null, this) //help wanted
+  game.physics.arcade.overlap (player, hearts, collectHeart, null, this) //help wanted
 
-  //collectHeart function () {} When the player hits a heart, he should gain a life //help wanted
+  //make function for collectHeart
+  function collectHeart (player, heart) {
+    heart.kill();
+    lives += 1;
+    scoreLives.text = 'Lives: ' + lives;
+  }
+
+  game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this) //help wanted
+
+  //make function for collectDiamond
+  function collectDiamond (player, diamond) {
+    diamond.kill();
+    for (var i = 0; i < 15; i++) {
+      star = stars.create ( player.position.x - i * 5 , game.world.bounds.y + i * 10, 'star');
+      star.body.gravity.y = 300;
+      star.checkWorldBounds = true;
+      star.outOfBoundsKill = true;
+    }
+  }
 
   //game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this) //help wanted
 
@@ -158,11 +238,11 @@ function update () {
   player.body.velocity.x = 0;
   if (cursors.left.isDown) {
     // move to the left
-    player.body.velocity.x = -150;
+    player.body.velocity.x = -250;
     player.animations.play ('left');
   } else if (cursors.right.isDown) {
     //move to the right
-    player.body.velocity.x = 150;
+    player.body.velocity.x = 250;
     player.animations.play ('right');
   } else {
     //stop moving
@@ -172,42 +252,19 @@ function update () {
   }
   //  allow the player to jump!!!
   if (cursors.up.isDown && player.body.touching.down) {
-    player.body.velocity.y = -350;
+    player.body.velocity.y = -450;
   }
 
 }
 
-//this function expects the user to provide the new position of the ledge and the width of it
-function addOneLedge (x, y, width) {
-  // return the first dead ledge, or null if none exist
-  var ledge = ledges.getFirstDead ();
-  if (ledge == null) {
-    return;
-    //otherwise add a new ledge to the game
-  } else {
-    ledge.width = width;
-    ledge.reset (x, y);
-    ledge.checkWorldBounds = true;
-    ledge.outOfBoundsKill = true;
-  }
 
+//make a function for collectDiamond
+function collectDiamond () {
+  diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'diamond');
+  diamond.body.gravity.y = 200;
+  diamond.checkWorldBounds = true;
+  diamond.outOfBoundsKill = true;
 }
-
-function addNewStar () {
-  star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
-  star.body.gravity.y = 300;
-  star.checkWorldBounds = true;
-  star.outOfBoundsKill = true;
-}
-
-//this function is a stub
-function addNewRock () {  //help wanted
-
-}
-
-//make function for addNewHeart //help wanted
-
-//make a function for addNewDiamond //help wanted
 
 //make 5 more ledges
 function make5Ledges () {
@@ -225,17 +282,17 @@ function make5Ledges () {
     // This means the player could spawn many many many ledges.
     if ( i == 3 ) {
       //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor (Math.random() * game.world.width), heightOfTallestLedge - 150, 'ground');
+      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - game.world.height * .1, 'ground');
       //randomly assign a width to the ledge
-      ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
+      ledge.width = randomLength [ Math.floor( Math.random() * 3) ];
       ledge.body.immovable = true;
       heightOf3rdLedge = ledge.position.y;
       heightOfTallestLedge = heightOf3rdLedge;
     } else {
       //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor ( Math.random() * game.world.width / 2), heightOfTallestLedge - 150, 'ground');
+      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - 50, 'ground');
       //randomly assign a width to the ledge
-      ledge.width = Math.floor ( Math.random() * ( game.world.width / 2 ) + game.world.width * .2 );
+      ledge.width = randomLength [ Math.floor( random * 3) ];
       ledge.body.immovable = true;
       heightOfTallestLedge = ledge.position.y;
     }
