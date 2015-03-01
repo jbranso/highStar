@@ -28,6 +28,8 @@ var heartsTimer;
 var diamonds;
 var diamondsTimer;
 //the object that will record user input via the arrow keys
+var tempStar;
+var tempStars;
 var cursors;
 var lives = 5;
 var scoreLives;
@@ -163,6 +165,9 @@ function create () {
     diamond.outOfBoundsKill = true;
   }
 
+  tempStars = game.add.group ();
+
+  tempStars.enableBody = true ;
 
   // ---------------------- Falling things --------------------------- //
 
@@ -196,7 +201,7 @@ function update () {
     scoreLives.text = 'Lives: ' + lives;
   }
 
-  game.physics.arcade.overlap (player, hearts, collectHeart, null, this) //help wanted
+  game.physics.arcade.overlap (player, hearts, collectHeart, null, this)
 
   //make function for collectHeart
   function collectHeart (player, heart) {
@@ -205,20 +210,42 @@ function update () {
     scoreLives.text = 'Lives: ' + lives;
   }
 
-  game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this) //help wanted
+
+  game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
 
   //make function for collectDiamond
   function collectDiamond (player, diamond) {
     diamond.kill();
-    for (var i = 0; i < 15; i++) {
-      star = stars.create ( player.position.x - i * 5 , game.world.bounds.y + i * 10, 'star');
-      star.body.gravity.y = 300;
-      star.checkWorldBounds = true;
-      star.outOfBoundsKill = true;
+    var i = 1;
+    game.time.events.repeat(Phaser.Timer.SECOND / 9, 15, createATempStar, this, i);
+    function createATempStar (i) {
+      //if there is no original tempStar, create it.
+      if ( tempStar == null) {
+        tempStar = tempStars.create (player.position.x, game.world.bounds.y, 'star');
+        tempStar.body.gravity.y = 300;
+        tempStar.checkWorldBounds = true;
+        tempStar.outOfBoundsKill = true;
+        // if you have made 15 stars stop;
+      // } else if ( tempStars.children.length > 14 ) {
+      //     diamondsTimer.destroy ();
+      } else {
+        tempStar = stars.create ( player.position.x - i * 3 , game.world.bounds.y, 'star');
+        i++;
+        tempStar.body.gravity.y = 300;
+        tempStar.checkWorldBounds = true;
+        tempStar.outOfBoundsKill = true;
+      }
     }
   }
 
-  //game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this) //help wanted
+  game.physics.arcade.overlap (player, tempStars, collectTempStar, null, this) //help wanted
+
+  //make function for collectHeart
+  function collectTempStar (player, tempStars) {
+    tempStar.kill();
+    lives += 1;
+    scoreLives.text = 'Lives: ' + lives;
+  }
 
   //collectDiamond function () {} when the player hits a diamond add 1,000 points to her score, AND
   //drop 15 or plus stars on the screen. like this
