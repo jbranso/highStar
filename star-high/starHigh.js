@@ -72,11 +72,28 @@ function create () {
   //add physics to the group
   ledges.enableBody = true;
 
-  randomLength = [ Math.floor (game.width / 3), Math.floor (game.width / 4), Math.floor ( game.width / 5 ), ];
-  // Display the player on the screen
-  //player = game.add.sprite (32, game.world.height - 150, 'dude');
+  randomLength = [ Math.floor (game.world.width / 3), Math.floor (game.world.width / 4), Math.floor ( game.world.width / 5 ), ];
+
   player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
   game.physics.arcade.enable (player);
+
+  ledge = ledges.createMultiple ( 50, 'ground' );
+
+  ledge = ledges.getFirstDead ();
+  ledge.body.immovable = true;
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.reset ( 50 , 350, 'ground');
+
+  ledge = ledges.getFirstDead ();
+  ledge.body.immovable = true;
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.reset ( 400 , 250, 'ground');
+
+
+  ledge = ledges.getFirstDead ();
+  ledge.body.immovable = true;
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.reset ( 650 , 100, 'ground');
 
   //how fast the player falls
   player.body.gravity.y = 400;
@@ -90,25 +107,7 @@ function create () {
 
   // ---------------------- Falling things --------------------------- //
 
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 400, 'ground');
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.body.immovable = true;
-
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 250, 'ground');
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.body.immovable = true;
-
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 150, 'ground');
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.body.immovable = true;
-
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 50, 'ground');
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.body.immovable = true;
-
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 00, 'ground');
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.body.immovable = true;
+  // ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 400, 'ground');
 
   // make stars its own group
   stars = game.add.group ();
