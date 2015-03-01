@@ -82,7 +82,7 @@ function create () {
   ledge = ledges.getFirstDead ();
   ledge.body.immovable = true;
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.reset ( 50 , 350, 'ground');
+  ledge.reset ( 50 , 450, 'ground');
 
   ledge = ledges.getFirstDead ();
   ledge.body.immovable = true;
