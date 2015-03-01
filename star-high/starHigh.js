@@ -98,7 +98,10 @@ function addVelocity ( ledge ) {
   ledge.body.velocity.y = ledgeVelocity;
 }
 
-
+function ledgeSetWidth ( ledge ) {
+  ledge.scale.setTo (2, 1);
+  ledge.width = ledgeWidth;
+}
 
 function create () {
   //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
@@ -111,15 +114,18 @@ function create () {
   x0 = 0;
   x1 = game.world.width / 4;
   x2 = game.world.width / 2;
-  x3 = game.world.width * ( 3 / 4 );
-  y3 = game.world.height / 4;
+  x3 = game.world.width * ( 3 / 4);
+  y0 = 0;
+  y1 = game.world.height / 4;
   y2 = game.world.height / 2;
-  y1 = game.world.height * ( 3 / 4);
-  y0 = game.world.height;
+  y3 = game.world.height * (3 / 4);
   ledgeWidth = game.world.width / 4;
   sky = game.add.sprite (0, 0, 'sky');
   sky.width = game.world.width;
   sky.height = game.world.height;
+
+  player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
+  game.physics.arcade.enable (player);
 
   // the platforms group shall be any object that is not movable, and the player can stand on it.
   platforms = game.add.group ();
@@ -138,48 +144,60 @@ function create () {
   ledges = game.add.group();
   //add physics to the group
   ledges.enableBody = true;
-
-  player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
-  game.physics.arcade.enable (player);
-
-  ledge = ledges.createMultiple ( 50, 'ground' );
+  //ledges.forEach (ledgeSetWidth, this, false, this);
   game.physics.arcade.enable (ledges);
 
-  ledge = ledges.getFirstDead ();
+  ledge = ledges.create (x0, y3, 'ground');
+  ledge.z = "x0";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
-  //If this is the first time you are drawing a ledge
-  ledge.reset ( x0, y0);
 
-  ledge = ledges.getFirstDead ();
+  ledge = ledges.create (x1, y2, 'ground');
+  ledge.z = "x1";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
-  //If this is the first time you are drawing a ledge
-  ledge.reset ( x1, y1);
 
-  ledge = ledges.getFirstDead ();
+  ledge = ledges.create (x2, y1, 'ground');
+  ledge.z = "x2";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
-  //If this is the first time you are drawing a ledge
-  ledge.reset ( x2, y2);
 
-  ledge = ledges.getFirstDead ();
+  ledge = ledges.create (x3, y0, 'ground');
+  ledge.z = "x3";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
-  //If this is the first time you are drawing a ledge
-  ledge.reset ( x3, y3);
 
   function recycleLedge(ledge) {
     //  Move the alien to the top of the screen again
-    ledge.reset(0, game.world.bounds.y);
+    switch (ledge.z) {
+    case "x0":
+      ledge.reset(x1, game.world.bounds.y);
+      break;
+    case "x1":
+      if (Math.floor ( Math.random() * 2)) {
+      ledge.reset(x0, game.world.bounds.y);
+      } else {
+      ledge.reset(x3, game.world.bounds.y);
+      }
+      break;
+    case "x2":
+      if (Math.floor ( Math.random() * 2)) {
+      ledge.reset(x1, game.world.bounds.y);
+      } else {
+      ledge.reset(x3, game.world.bounds.y);
+      }
+      break;
+    case "x3":
+      ledge.reset(x3, game.world.bounds.y);
+    }
   }
 
   //how fast the player falls
