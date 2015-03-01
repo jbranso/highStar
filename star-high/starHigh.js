@@ -90,7 +90,7 @@ function create () {
 
   // ---------------------- Falling things --------------------------- //
 
-  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 300, 'ground');
+  ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 400, 'ground');
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
   ledge.body.immovable = true;
 
@@ -317,7 +317,7 @@ function make5Ledges () {
     // This means the player could spawn many many many ledges.
     if ( i == 3 ) {
       //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - game.world.height * .1, 'ground');
+      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - game.world.height * .4, 'ground');
       //randomly assign a width to the ledge
       ledge.width = randomLength [ Math.floor( Math.random() * 3) ];
       ledge.body.immovable = true;
