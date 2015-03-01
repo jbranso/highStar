@@ -29,16 +29,15 @@ var diamonds;
 var diamondsTimer;
 //the object that will record user input via the arrow keys
 var tempStar;
-var tempStars;
 var cursors;
+var sky;
 var lives = 5;
 var scoreLives;
-var sky;
 var score = 0;
 var scoreText;
 //the many different ledges that will pop up and the player can move up in the game.
 var heightOfTallestLedge;
-var random; // this is the random number generator
+// this is the random length to use for a ledge. it'll be an array
 var randomLength;
 var i = 1;
 var x;
@@ -118,13 +117,21 @@ function create () {
   stars.enableBody = true;
 
   //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-  starsTimer = game.time.events.loop(1000, addNewStar, this);
+  starsTimer = game.time.events.loop(1009, addNewStar, this);
 
   function addNewStar () {
-    star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
-    star.body.gravity.y = 300;
-    star.checkWorldBounds = true;
-    star.outOfBoundsKill = true;
+    if (stars.children.length < 99 ) {
+      star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
+      star.name = 'star';
+      star.body.gravity.y = 300;
+      star.checkWorldBounds = true;
+      star.outOfBoundsKill = true;
+    } else recycleStar ();
+  }
+
+  function recycleStar () {
+    star = stars.getFirstDead ();
+    star.reset (Math.floor (Math.random() * game.world.width ), game.world.bounds.y);
   }
 
   //make rocks its own group
@@ -133,7 +140,7 @@ function create () {
   rocks.enableBody = true;
   //add a timer that will add a new rock and place it randomly on the screen
   //in the addNewRock, function, subtract 1 from the lives variable
-  rocksTimer = game.time.events.loop (30000, addNewRock, this);
+  rocksTimer = game.time.events.loop (30011, addNewRock, this);
 
   function addNewRock () {
     rock = rocks.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'rock');
@@ -157,7 +164,7 @@ function create () {
 
   diamonds = game.add.group ();
   diamonds.enableBody = true ;
-  diamondsTimer = game.time.events.loop (3000, addNewDiamond, this);
+  diamondsTimer = game.time.events.loop (10007, addNewDiamond, this);
 
   function addNewDiamond () {
     diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'diamond');
@@ -165,10 +172,6 @@ function create () {
     diamond.checkWorldBounds = true;
     diamond.outOfBoundsKill = true;
   }
-
-  tempStars = game.add.group ();
-
-  tempStars.enableBody = true ;
 
   // ---------------------- Falling things --------------------------- //
 
@@ -217,10 +220,33 @@ function update () {
     diamond.kill();
     var x = Math.floor (player.position.x);
     var i = 1;
-    game.time.events.repeat(100, 15, createATempStar, this );
+    // if stars already has 50+ stars, recyle 'em. Don't make more.
+    if (stars.children.length > 98 ) {
+      game.time.events.repeat(100, 15, recycleATempStar, this );
+    } else {
+      game.time.events.repeat(100, 15, createATempStar, this );
+    }
     function createATempStar () {
       //if there is no original tempStar, create it.
-      tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
+      if (x < game.world.width / 2) {
+        tempStar = stars.create (x + i * 22, game.world.bounds.y, 'star');
+      } else if (x > game.world.width / 2) {
+        tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
+      }
+      i++;
+      tempStar.body.gravity.y = 300;
+      tempStar.checkWorldBounds = true;
+      tempStar.outOfBoundsKill = true;
+    }
+
+    function recycleATempStar () {
+      //if there is no original tempStar, create it.
+      tempStar = stars.getFirstDead ();
+      if (x < game.world.width / 2) {
+        tempStar = stars.reset (x + i * 22, game.world.bounds.y, 'star');
+      } else if (x > game.world.width / 2) {
+        tempStar = stars.reset (x - i * 22, game.world.bounds.y, 'star');
+      }
       i++;
       tempStar.body.gravity.y = 300;
       tempStar.checkWorldBounds = true;
