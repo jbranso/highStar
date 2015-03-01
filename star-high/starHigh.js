@@ -18,7 +18,10 @@ var ground;
 var platforms;
 var ledges;
 var ledge;
-var heightOf3rdLedge;
+var ledgeVelocity = 20;
+// the ledgePosition with have 3 possible values:  0                   1                     2                  3
+// It will determine where the next ledge will be put on the screen
+var ledgePosition;
 var stars;
 var starsTimer;
 var rocks;
@@ -36,8 +39,6 @@ var scoreLives;
 var score = 0;
 var scoreText;
 //the many different ledges that will pop up and the player can move up in the game.
-var heightOfTallestLedge;
-// this is the random length to use for a ledge. it'll be an array
 var randomLength;
 var i = 1;
 var x;
@@ -78,22 +79,49 @@ function create () {
   game.physics.arcade.enable (player);
 
   ledge = ledges.createMultiple ( 50, 'ground' );
+  game.physics.arcade.enable (ledges);
+  ledgePosition = Math.floor( Math.random() * 4);
 
   ledge = ledges.getFirstDead ();
-  ledge.body.immovable = true;
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.reset ( 50 , 450, 'ground');
+  ledge.body.immovable = true;
+  ledge.checkWorldBounds = true;
+  ledge.events.onOutOfBounds.add(recycleLedge, this);
+  //If this is the first time you are drawing a ledge
+  ledge.reset ( 0, game.world.height / 4 );
+  ledge.position.z = 0;
 
   ledge = ledges.getFirstDead ();
-  ledge.body.immovable = true;
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.reset ( 400 , 250, 'ground');
-
+  ledge.body.immovable = true;
+  ledge.checkWorldBounds = true;
+  ledge.events.onOutOfBounds.add(recycleLedge, this);
+  //If this is the first time you are drawing a ledge
+  ledge.reset ( game.world.width / 4, game.world.height / 2 );
+  ledge.position.z = 1;
 
   ledge = ledges.getFirstDead ();
-  ledge.body.immovable = true;
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
-  ledge.reset ( 650 , 100, 'ground');
+  ledge.body.immovable = true;
+  ledge.checkWorldBounds = true;
+  ledge.events.onOutOfBounds.add(recycleLedge, this);
+  //If this is the first time you are drawing a ledge
+  ledge.reset ( game.world.width / 2) , game.world.height * (3 / 4) ;
+  ledge.position.z = 2;
+
+  ledge = ledges.getFirstDead ();
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+  ledge.checkWorldBounds = true;
+  ledge.events.onOutOfBounds.add(recycleLedge, this);
+  //If this is the first time you are drawing a ledge
+  ledge.reset ( game.world.width * (3 / 4) , 0 ) ;
+  ledge.position.z = 3;
+
+  function recycleLedge(ledge) {
+    //  Move the alien to the top of the screen again
+    ledge.reset(0, game.world.bounds.y);
+  }
 
   //how fast the player falls
   player.body.gravity.y = 400;
@@ -188,6 +216,11 @@ function update () {
   game.physics.arcade.collide (player, ledges);
   game.physics.arcade.overlap (player, rocks, collectRock, null, this);
 
+  ledges.forEachAlive (addVelocity, this, this);
+
+  function addVelocity ( ledge ) {
+    ledge.body.velocity.y = ledgeVelocity;
+  }
   // I have to specify here when the player lands on the 3rd ledge, to spawn 5 more.
 
   function collectStar (player, star) {
@@ -242,9 +275,9 @@ function update () {
       //if there is no original tempStar, create it.
       tempStar = stars.getFirstDead ();
       if (x < game.world.width / 2) {
-        tempStar.reset (x + i * 22, game.world.bounds.y, 'star');
+        tempStar.reset (x + i * 22, game.world.bounds.y);
       } else if (x > game.world.width / 2) {
-        tempStar.reset (x - i * 22, game.world.bounds.y, 'star');
+        tempStar.reset (x - i * 22, game.world.bounds.y);
       }
       i++;
       tempStar.body.gravity.y = 300;
@@ -298,38 +331,4 @@ function collectDiamond () {
   diamond.body.gravity.y = 200;
   diamond.checkWorldBounds = true;
   diamond.outOfBoundsKill = true;
-}
-
-//make 5 more ledges
-function make5Ledges () {
-  //get the tallest sprite on the world
-  heightOfTallestLedge = ledges.getTop();
-  if (heightOfTallestLedge == null) {
-    //ground.position returns an object. We want y, the position of the image on the y-axis.
-    heightOfTallestLedge = ground.position.y;
-  } else {
-    heightOfTallestLedge = heightOfTallestLedge.position.y;
-  }
-  for (var i = 1; i < 6; i++) {
-    // if this is the 3rd ledge, make sure that when the player touches it, we create 5 more ledges.
-    // This code is not perfect.  It is possible for the user to overlap with this ledge multiple times...
-    // This means the player could spawn many many many ledges.
-    if ( i == 3 ) {
-      //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - game.world.height * .4, 'ground');
-      //randomly assign a width to the ledge
-      ledge.width = randomLength [ Math.floor( Math.random() * 3) ];
-      ledge.body.immovable = true;
-      heightOf3rdLedge = ledge.position.y;
-      heightOfTallestLedge = heightOf3rdLedge;
-    } else {
-      //make the ledge be randomly put on the map...
-      ledge = ledges.create (Math.floor( Math.random() * game.world.width ), heightOfTallestLedge - 50, 'ground');
-      //randomly assign a width to the ledge
-      ledge.width = randomLength [ Math.floor( random * 3) ];
-      ledge.body.immovable = true;
-      heightOfTallestLedge = ledge.position.y;
-    }
-  }
-//  game.physics.arcade.overlap (player, ledge, make5ledges, null, this);
 }
