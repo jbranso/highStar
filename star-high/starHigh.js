@@ -243,9 +243,9 @@ function update () {
       //if there is no original tempStar, create it.
       tempStar = stars.getFirstDead ();
       if (x < game.world.width / 2) {
-        tempStar = stars.reset (x + i * 22, game.world.bounds.y, 'star');
+        tempStar.reset (x + i * 22, game.world.bounds.y, 'star');
       } else if (x > game.world.width / 2) {
-        tempStar = stars.reset (x - i * 22, game.world.bounds.y, 'star');
+        tempStar.reset (x - i * 22, game.world.bounds.y, 'star');
       }
       i++;
       tempStar.body.gravity.y = 300;
