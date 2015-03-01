@@ -40,7 +40,8 @@ var scoreText;
 var heightOfTallestLedge;
 var random; // this is the random number generator
 var randomLength;
-
+var i = 1;
+var x;
 
 function create () {
   //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
@@ -210,42 +211,23 @@ function update () {
     scoreLives.text = 'Lives: ' + lives;
   }
 
-
   game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
-
   //make function for collectDiamond
   function collectDiamond (player, diamond) {
     diamond.kill();
+    var x = Math.floor (player.position.x);
     var i = 1;
-    game.time.events.repeat(Phaser.Timer.SECOND / 9, 15, createATempStar, this, i);
-    function createATempStar (i) {
+    game.time.events.repeat(100, 15, createATempStar, this );
+    function createATempStar () {
       //if there is no original tempStar, create it.
-      if ( tempStar == null) {
-        tempStar = tempStars.create (player.position.x, game.world.bounds.y, 'star');
-        tempStar.body.gravity.y = 300;
-        tempStar.checkWorldBounds = true;
-        tempStar.outOfBoundsKill = true;
-        // if you have made 15 stars stop;
-      // } else if ( tempStars.children.length > 14 ) {
-      //     diamondsTimer.destroy ();
-      } else {
-        tempStar = stars.create ( player.position.x - i * 3 , game.world.bounds.y, 'star');
-        i++;
-        tempStar.body.gravity.y = 300;
-        tempStar.checkWorldBounds = true;
-        tempStar.outOfBoundsKill = true;
+      tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
+      i++;
+      tempStar.body.gravity.y = 300;
+      tempStar.checkWorldBounds = true;
+      tempStar.outOfBoundsKill = true;
       }
     }
-  }
 
-  game.physics.arcade.overlap (player, tempStars, collectTempStar, null, this) //help wanted
-
-  //make function for collectHeart
-  function collectTempStar (player, tempStars) {
-    tempStar.kill();
-    lives += 1;
-    scoreLives.text = 'Lives: ' + lives;
-  }
 
   //collectDiamond function () {} when the player hits a diamond add 1,000 points to her score, AND
   //drop 15 or plus stars on the screen. like this
