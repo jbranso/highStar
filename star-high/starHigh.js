@@ -10,6 +10,7 @@ function preload () {
   game.load.image ( 'sky', 'assets/sky.png' );
   game.load.image ( 'rock', 'assets/rock.png' );
   game.load.image ( 'diamond', 'assets/diamond.png' );
+  game.load.image ( 'restart', 'assets/restart.png' );
 }
 
 var player;
@@ -22,6 +23,8 @@ var ledgeVelocity = 20;
 // the ledgePosition with have 3 possible values:  0                   1                     2                  3
 // It will determine where the next ledge will be put on the screen
 var ledgePosition;
+// This will store the value of the ledges width
+var ledgeWidth;
 var stars;
 var starsTimer;
 var rocks;
@@ -38,10 +41,64 @@ var lives = 5;
 var scoreLives;
 var score = 0;
 var scoreText;
-//the many different ledges that will pop up and the player can move up in the game.
-var randomLength;
 var i = 1;
 var x;
+// these will store the values of the various places on the screen I can put a ledge.
+// This is much easier than saying game.world.width / 2;
+var x0;
+var x1;
+var x2;
+var x3;
+var y0;
+var y1;
+var y2;
+var y3;
+var restartImage;
+var gameValue;
+
+function restartGame () {
+  gameValue = "play";
+
+  ledge = ledges.getFirstDead ();
+  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.body.immovable = true;
+  ledge.checkWorldBounds = true;
+  ledge.events.onOutOfBounds.add(recycleLedge, this);
+  //If this is the first time you are drawing a ledge
+  ledge.reset ( x0, y0 );
+  ledge.reset ( x1, y1 );
+  ledge.reset ( x2, y2 );
+  ledge.reset ( x3, y3 );
+  ledge.reset ( x4, y4 );
+}
+
+//When the star hits the player, kill increase the score
+function collectStar (player, star) {
+  star.kill();
+  score += 10;
+  scoreText.text = 'Score: ' + score;
+}
+
+//When the rock hits the player, kill increase the score
+function collectRock (player, rock) {
+  rock.kill();
+  lives -= 1;
+  scoreLives.text = 'Lives: ' + lives;
+}
+
+//make function for collectHeart
+function collectHeart (player, heart) {
+  heart.kill();
+  lives += 1;
+  scoreLives.text = 'Lives: ' + lives;
+}
+
+//add a velocity to all alive ledges
+function addVelocity ( ledge ) {
+  ledge.body.velocity.y = ledgeVelocity;
+}
+
+
 
 function create () {
   //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
@@ -51,6 +108,15 @@ function create () {
   // Set the physics system
   game.physics.startSystem (Phaser.Physics.ARCADE);
 
+  x0 = 0;
+  x1 = game.world.width / 4;
+  x2 = game.world.width / 2;
+  x3 = game.world.width * ( 3 / 4 );
+  y3 = game.world.height / 4;
+  y2 = game.world.height / 2;
+  y1 = game.world.height * ( 3 / 4);
+  y0 = game.world.height;
+  ledgeWidth = game.world.width / 4;
   sky = game.add.sprite (0, 0, 'sky');
   sky.width = game.world.width;
   sky.height = game.world.height;
@@ -73,50 +139,43 @@ function create () {
   //add physics to the group
   ledges.enableBody = true;
 
-  randomLength = [ Math.floor (game.world.width / 3), Math.floor (game.world.width / 4), Math.floor ( game.world.width / 5 ), ];
-
   player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
   game.physics.arcade.enable (player);
 
   ledge = ledges.createMultiple ( 50, 'ground' );
   game.physics.arcade.enable (ledges);
-  ledgePosition = Math.floor( Math.random() * 4);
 
   ledge = ledges.getFirstDead ();
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
   //If this is the first time you are drawing a ledge
-  ledge.reset ( 0, game.world.height / 4 );
-  ledge.position.z = 0;
+  ledge.reset ( x0, y0);
 
   ledge = ledges.getFirstDead ();
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
   //If this is the first time you are drawing a ledge
-  ledge.reset ( game.world.width / 4, game.world.height / 2 );
-  ledge.position.z = 1;
+  ledge.reset ( x1, y1);
 
   ledge = ledges.getFirstDead ();
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
   //If this is the first time you are drawing a ledge
-  ledge.reset ( game.world.width / 2) , game.world.height * (3 / 4) ;
-  ledge.position.z = 2;
+  ledge.reset ( x2, y2);
 
   ledge = ledges.getFirstDead ();
-  ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
+  ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
   //If this is the first time you are drawing a ledge
-  ledge.reset ( game.world.width * (3 / 4) , 0 ) ;
-  ledge.position.z = 3;
+  ledge.reset ( x3, y3);
 
   function recycleLedge(ledge) {
     //  Move the alien to the top of the screen again
@@ -158,7 +217,7 @@ function create () {
 
   function recycleStar () {
     star = stars.getFirstDead ();
-    star.reset (Math.floor (Math.random() * game.world.width ), game.world.bounds.y);
+    star.reset (Math.floor (Math.random() * game.world.width ), 0);
   }
 
   //make rocks its own group
@@ -210,79 +269,79 @@ function create () {
 }
 
 function update () {
-  //collide the player with the platforms
-  game.physics.arcade.collide (player, platforms);
-  game.physics.arcade.overlap (player, stars, collectStar, null, this);
-  game.physics.arcade.collide (player, ledges);
-  game.physics.arcade.overlap (player, rocks, collectRock, null, this);
+  if ( gameValue == "blocked" ) {
+    //do not update the game at all
+  } else {
 
-  ledges.forEachAlive (addVelocity, this, this);
-
-  function addVelocity ( ledge ) {
-    ledge.body.velocity.y = ledgeVelocity;
-  }
-  // I have to specify here when the player lands on the 3rd ledge, to spawn 5 more.
-
-  function collectStar (player, star) {
-    star.kill();
-    score += 10;
-    scoreText.text = 'Score: ' + score;
-  }
-
-  game.physics.arcade.overlap (player, rocks, collectRock, null, this);
-
-  function collectRock (player, rock) {
-    rock.kill();
-    lives -= 1;
-    scoreLives.text = 'Lives: ' + lives;
-  }
-
-  game.physics.arcade.overlap (player, hearts, collectHeart, null, this)
-
-  //make function for collectHeart
-  function collectHeart (player, heart) {
-    heart.kill();
-    lives += 1;
-    scoreLives.text = 'Lives: ' + lives;
-  }
-
-  game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
-  //make function for collectDiamond
-  function collectDiamond (player, diamond) {
-    diamond.kill();
-    var x = Math.floor (player.position.x);
-    var i = 1;
-    // if stars already has 50+ stars, recyle 'em. Don't make more.
-    if (stars.children.length > 98 ) {
-      game.time.events.repeat(100, 15, recycleATempStar, this );
-    } else {
-      game.time.events.repeat(100, 15, createATempStar, this );
-    }
-    function createATempStar () {
-      //if there is no original tempStar, create it.
-      if (x < game.world.width / 2) {
-        tempStar = stars.create (x + i * 22, game.world.bounds.y, 'star');
-      } else if (x > game.world.width / 2) {
-        tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
-      }
-      i++;
-      tempStar.body.gravity.y = 300;
-      tempStar.checkWorldBounds = true;
-      tempStar.outOfBoundsKill = true;
+    // if(userClicksRestart() || (lives == 0)){ // Check to see the game needs restarting
+    //if the user has lost all of his lives...
+    if ( lives == 0) {
+      score = 0;   // Reset the score to zero
+      lives = 5;
+      ledges.kill();
+      player.kill();
+      diamonds.kill();
+      hearts.kill();
+      rocks.kill();
+      restartImage = game.add.sprite(game.world.centerX, game.world.centerY, 'einstein');
+      //center the image well
+      restartImage.anchor.set(0.5);
+      //  Enables all kind of input actions on this image (click, etc)
+      restartImage.inputEnabled = true;
+      restartImage.events.onInputDown.add(restartGame, this);
+      gameValue = "blocked";
     }
 
-    function recycleATempStar () {
-      //if there is no original tempStar, create it.
-      tempStar = stars.getFirstDead ();
-      if (x < game.world.width / 2) {
-        tempStar.reset (x + i * 22, game.world.bounds.y);
-      } else if (x > game.world.width / 2) {
-        tempStar.reset (x - i * 22, game.world.bounds.y);
+    //collide the player with the platforms
+    game.physics.arcade.collide (player, platforms);
+    game.physics.arcade.overlap (player, stars, collectStar, null, this);
+    game.physics.arcade.collide (player, ledges);
+    game.physics.arcade.overlap (player, rocks, collectRock, null, this);
+
+    ledges.forEachAlive (addVelocity, this, this);
+
+    game.physics.arcade.overlap (player, rocks, collectRock, null, this);
+
+    game.physics.arcade.overlap (player, hearts, collectHeart, null, this)
+
+
+    game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
+    //make function for collectDiamond
+    function collectDiamond (player, diamond) {
+      diamond.kill();
+      var x = Math.floor (player.position.x);
+      var i = 1;
+      // if stars already has 50+ stars, recyle 'em. Don't make more.
+      if (stars.children.length > 98 ) {
+        game.time.events.repeat(100, 15, recycleATempStar, this );
+      } else {
+        game.time.events.repeat(100, 15, createATempStar, this );
       }
-      i++;
-      tempStar.body.gravity.y = 300;
-      tempStar.checkWorldBounds = true;
-      tempStar.outOfBoundsKill = true;
+      function createATempStar () {
+        //if there is no original tempStar, create it.
+        if (x < game.world.width / 2) {
+          tempStar = stars.create (x + i * 22, game.world.bounds.y, 'star');
+        } else if (x > game.world.width / 2) {
+          tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
+        }
+        i++;
+        tempStar.body.gravity.y = 300;
+        tempStar.checkWorldBounds = true;
+        tempStar.outOfBoundsKill = true;
+      }
+
+      function recycleATempStar () {
+        //if there is no original tempStar, create it.
+        tempStar = stars.getFirstDead ();
+        if (x < game.world.width / 2) {
+          tempStar.reset (x + i * 22, game.world.bounds.y);
+        } else if (x > game.world.width / 2) {
+          tempStar.reset (x - i * 22, game.world.bounds.y);
+        }
+        i++;
+        tempStar.body.gravity.y = 300;
+        tempStar.checkWorldBounds = true;
+        tempStar.outOfBoundsKill = true;
       }
     }
 
@@ -302,26 +361,27 @@ function update () {
   //           *
   //            *
 
-  player.body.velocity.x = 0;
-  if (cursors.left.isDown) {
-    // move to the left
-    player.body.velocity.x = -250;
-    player.animations.play ('left');
-  } else if (cursors.right.isDown) {
-    //move to the right
-    player.body.velocity.x = 250;
-    player.animations.play ('right');
-  } else {
-    //stop moving
-    player.animations.stop();
-    //make the player look at you.
-    player.frame = 4;
-  }
-  //  allow the player to jump!!!
-  if (cursors.up.isDown && player.body.touching.down) {
-    player.body.velocity.y = -450;
-  }
+    player.body.velocity.x = 0;
+    if (cursors.left.isDown) {
+      // move to the left
+      player.body.velocity.x = -250;
+      player.animations.play ('left');
+    } else if (cursors.right.isDown) {
+      //move to the right
+      player.body.velocity.x = 250;
+      player.animations.play ('right');
+    } else {
+      //stop moving
+      player.animations.stop();
+      //make the player look at you.
+      player.frame = 4;
+    }
+    //  allow the player to jump!!!
+    if (cursors.up.isDown && player.body.touching.down) {
+      player.body.velocity.y = -450;
+    }
 
+  }
 }
 
 
