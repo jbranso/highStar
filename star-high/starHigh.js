@@ -19,10 +19,10 @@ var ground;
 var platforms;
 var ledges;
 var ledge;
-var ledgeVelocity = 20;
+var ledgeVelocity = 300;
 // the ledgePosition with have 3 possible values:  0                   1                     2                  3
 // It will determine where the next ledge will be put on the screen
-var ledgePosition;
+var ledgeXPosition;
 // This will store the value of the ledges width
 var ledgeWidth;
 var stars;
@@ -59,6 +59,7 @@ var gameValue;
 function restartGame () {
   gameValue = "play";
 
+  // all this code needs work //help wanted
   ledge = ledges.getFirstDead ();
   ledge.width = randomLength[ Math.floor (Math.random() * 3) ];
   ledge.body.immovable = true;
@@ -147,56 +148,63 @@ function create () {
   //ledges.forEach (ledgeSetWidth, this, false, this);
   game.physics.arcade.enable (ledges);
 
+  // create the 4 ledges
   ledge = ledges.create (x0, y3, 'ground');
-  ledge.z = "x0";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
 
   ledge = ledges.create (x1, y2, 'ground');
-  ledge.z = "x1";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
 
   ledge = ledges.create (x2, y1, 'ground');
-  ledge.z = "x2";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
   ledge.events.onOutOfBounds.add(recycleLedge, this);
 
   ledge = ledges.create (x3, y0, 'ground');
-  ledge.z = "x3";
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
   ledge.checkWorldBounds = true;
+  ledgeXPosition = "x3";
   ledge.events.onOutOfBounds.add(recycleLedge, this);
 
   function recycleLedge(ledge) {
     //  Move the alien to the top of the screen again
-    switch (ledge.z) {
+    switch (ledgeXPosition) {
     case "x0":
-      ledge.reset(x1, game.world.bounds.y);
+      ledge.reset(x1, 0);
+      ledgeXPosition = "x1";
       break;
     case "x1":
       if (Math.floor ( Math.random() * 2)) {
-      ledge.reset(x0, game.world.bounds.y);
+        ledge.reset(x0, 0);
+        ledgeXPosition = "x0";
       } else {
-      ledge.reset(x3, game.world.bounds.y);
+        ledge.reset(x2, 0);
+        ledgeXPosition = "x2";
       }
       break;
     case "x2":
       if (Math.floor ( Math.random() * 2)) {
-      ledge.reset(x1, game.world.bounds.y);
+        ledge.reset(x1, 0);
+        ledgeXPosition = "x1";
       } else {
-      ledge.reset(x3, game.world.bounds.y);
+        ledge.reset(x3, 0);
+        ledgeXPosition = "x3";
       }
       break;
     case "x3":
-      ledge.reset(x3, game.world.bounds.y);
+      ledge.reset(x2, 0);
+        ledgeXPosition = "x2";
+      break;
+    default:
+      alert ("your switch statement is broken");
     }
   }
 
