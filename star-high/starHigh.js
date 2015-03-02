@@ -19,7 +19,7 @@ var ground;
 var platforms;
 var ledges;
 var ledge;
-var ledgeVelocity = 300;
+var ledgeVelocity = 50;
 // the ledgePosition with have 3 possible values:  0                   1                     2                  3
 // It will determine where the next ledge will be put on the screen
 var ledgeXPosition;
@@ -94,6 +94,45 @@ function collectHeart (player, heart) {
   scoreLives.text = 'Lives: ' + lives;
 }
 
+
+function collectDiamond (player, diamond) {
+  diamond.kill();
+  var x = Math.floor (player.position.x);
+  var i = 1;
+  // if stars already has 50+ stars, recyle 'em. Don't make more.
+  if (stars.children.length > 98 ) {
+    game.time.events.repeat(100, 15, recycleATempStar, this );
+  } else {
+    game.time.events.repeat(100, 15, createATempStar, this );
+  }
+  function createATempStar () {
+    //if there is no original tempStar, create it.
+    if (x < game.world.width / 2) {
+      tempStar = stars.create (x + i * 20, 0, 'star');
+    } else if (x > game.world.width / 2) {
+      tempStar = stars.create (x - i * 20, 0, 'star');
+    }
+    i++;
+    tempStar.body.gravity.y = 300;
+    tempStar.checkWorldBounds = true;
+    tempStar.outOfBoundsKill = true;
+  }
+
+  function recycleATempStar () {
+    //if there is no original tempStar, create it.
+    tempStar = stars.getFirstDead ();
+    if (x < game.world.width / 2) {
+      tempStar.reset (x + i * 20, 0);
+    } else if (x > game.world.width / 2) {
+      tempStar.reset (x - i * 20, 0);
+    }
+    i++;
+    tempStar.body.gravity.y = 300;
+    tempStar.checkWorldBounds = true;
+    tempStar.outOfBoundsKill = true;
+  }
+}
+
 //add a velocity to all alive ledges
 function addVelocity ( ledge ) {
   ledge.body.velocity.y = ledgeVelocity;
@@ -120,7 +159,7 @@ function create () {
   y1 = game.world.height / 4;
   y2 = game.world.height / 2;
   y3 = game.world.height * (3 / 4);
-  ledgeWidth = game.world.width / 4;
+  ledgeWidth = game.world.width / 4 / 1.5;
   sky = game.add.sprite (0, 0, 'sky');
   sky.width = game.world.width;
   sky.height = game.world.height;
@@ -233,7 +272,7 @@ function create () {
 
   function addNewStar () {
     if (stars.children.length < 99 ) {
-      star = stars.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'star');
+      star = stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
       star.name = 'star';
       star.body.gravity.y = 300;
       star.checkWorldBounds = true;
@@ -255,7 +294,7 @@ function create () {
   rocksTimer = game.time.events.loop (30011, addNewRock, this);
 
   function addNewRock () {
-    rock = rocks.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'rock');
+    rock = rocks.create ( Math.floor (Math.random() * game.world.width ), 0, 'rock');
     rock.body.gravity.y = 300;
     rock.checkWorldBounds = true;
     rock.outOfBoundsKill = true;
@@ -268,7 +307,7 @@ function create () {
   heartsTimer = game.time.events.loop (60000, addNewHeart, this);
 
   function addNewHeart () {
-    heart = hearts.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'heart');
+    heart = hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
     heart.body.gravity.y = 300;
     heart.checkWorldBounds = true;
     heart.outOfBoundsKill = true;
@@ -279,7 +318,7 @@ function create () {
   diamondsTimer = game.time.events.loop (10007, addNewDiamond, this);
 
   function addNewDiamond () {
-    diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'diamond');
+    diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), 0, 'diamond');
     diamond.body.gravity.y = 300;
     diamond.checkWorldBounds = true;
     diamond.outOfBoundsKill = true;
@@ -333,43 +372,6 @@ function update () {
 
     game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
     //make function for collectDiamond
-    function collectDiamond (player, diamond) {
-      diamond.kill();
-      var x = Math.floor (player.position.x);
-      var i = 1;
-      // if stars already has 50+ stars, recyle 'em. Don't make more.
-      if (stars.children.length > 98 ) {
-        game.time.events.repeat(100, 15, recycleATempStar, this );
-      } else {
-        game.time.events.repeat(100, 15, createATempStar, this );
-      }
-      function createATempStar () {
-        //if there is no original tempStar, create it.
-        if (x < game.world.width / 2) {
-          tempStar = stars.create (x + i * 22, game.world.bounds.y, 'star');
-        } else if (x > game.world.width / 2) {
-          tempStar = stars.create (x - i * 22, game.world.bounds.y, 'star');
-        }
-        i++;
-        tempStar.body.gravity.y = 300;
-        tempStar.checkWorldBounds = true;
-        tempStar.outOfBoundsKill = true;
-      }
-
-      function recycleATempStar () {
-        //if there is no original tempStar, create it.
-        tempStar = stars.getFirstDead ();
-        if (x < game.world.width / 2) {
-          tempStar.reset (x + i * 22, game.world.bounds.y);
-        } else if (x > game.world.width / 2) {
-          tempStar.reset (x - i * 22, game.world.bounds.y);
-        }
-        i++;
-        tempStar.body.gravity.y = 300;
-        tempStar.checkWorldBounds = true;
-        tempStar.outOfBoundsKill = true;
-      }
-    }
 
 
   //collectDiamond function () {} when the player hits a diamond add 1,000 points to her score, AND
@@ -408,13 +410,4 @@ function update () {
     }
 
   }
-}
-
-
-//make a function for collectDiamond
-function collectDiamond () {
-  diamond = diamonds.create ( Math.floor (Math.random() * game.world.width ), game.world.bounds.y, 'diamond');
-  diamond.body.gravity.y = 200;
-  diamond.checkWorldBounds = true;
-  diamond.outOfBoundsKill = true;
 }
