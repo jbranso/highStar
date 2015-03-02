@@ -1,18 +1,3 @@
-//Set up the phaser game.
-var game = new Phaser.Game ('100%', '100%', Phaser.AUTO, 'myDiv', {preload: preload, create: create, update: update });
-
-function preload () {
-  game.load.spritesheet ( 'dude', 'assets/dude.png', 32, 48 );
-  game.load.image ('ground', 'assets/platform.png');
-  game.load.image ( 'star', 'assets/star.png' );
-  game.load.image ( 'baddie', 'assets/baddie.png' );
-  game.load.image ( 'heart',  'assets/heart.png' );
-  game.load.image ( 'sky', 'assets/sky.png' );
-  game.load.image ( 'rock', 'assets/rock.png' );
-  game.load.image ( 'diamond', 'assets/diamond.png' );
-  game.load.image ( 'restart', 'assets/restart.png' );
-}
-
 var player;
 //anything hard that will not move and the player can stand on.
 var ground;
@@ -55,6 +40,21 @@ var y2;
 var y3;
 var restartImage;
 var gameValue;
+
+//Set up the phaser game.
+var game = new Phaser.Game ('100%', '100%', Phaser.AUTO, 'myDiv', {preload: preload, create: create, update: update });
+
+function preload () {
+  game.load.spritesheet ( 'dude', 'assets/dude.png', 32, 48 );
+  game.load.image ('ground', 'assets/platform.png');
+  game.load.image ( 'star', 'assets/star.png' );
+  game.load.image ( 'baddie', 'assets/baddie.png' );
+  game.load.image ( 'heart',  'assets/heart.png' );
+  game.load.image ( 'sky', 'assets/sky.png' );
+  game.load.image ( 'rock', 'assets/rock.png' );
+  game.load.image ( 'diamond', 'assets/diamond.png' );
+  game.load.image ( 'restart', 'assets/restart.png' );
+}
 
 function restartGame () {
   gameValue = "play";
@@ -188,6 +188,7 @@ function create () {
   game.physics.arcade.enable (ledges);
 
   // create the 4 ledges
+  //use arrays x [ ],  y [ ] to put this in a for loop help wanted
   ledge = ledges.create (x0, y3, 'ground');
   ledge.width = ledgeWidth;
   ledge.body.immovable = true;
@@ -248,7 +249,7 @@ function create () {
   }
 
   //how fast the player falls
-  player.body.gravity.y = 400;
+  player.body.gravity.y = 600;
   // if the player will collide with the world
   player.body.collideWorldBounds = true;
 
@@ -258,8 +259,6 @@ function create () {
   cursors = game.input.keyboard.createCursorKeys ();
 
   // ---------------------- Falling things --------------------------- //
-
-  // ledge = ledges.create ( Math.floor (Math.random() * game.world.width), 400, 'ground');
 
   // make stars its own group
   stars = game.add.group ();
@@ -273,11 +272,12 @@ function create () {
   function addNewStar () {
     if (stars.children.length < 99 ) {
       star = stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
-      star.name = 'star';
       star.body.gravity.y = 300;
       star.checkWorldBounds = true;
       star.outOfBoundsKill = true;
-    } else recycleStar ();
+    } else {
+      recycleStar ();
+    }
   }
 
   function recycleStar () {
@@ -361,33 +361,14 @@ function update () {
     game.physics.arcade.collide (player, platforms);
     game.physics.arcade.overlap (player, stars, collectStar, null, this);
     game.physics.arcade.collide (player, ledges);
-    game.physics.arcade.overlap (player, rocks, collectRock, null, this);
-
     ledges.forEachAlive (addVelocity, this, this);
 
     game.physics.arcade.overlap (player, rocks, collectRock, null, this);
 
     game.physics.arcade.overlap (player, hearts, collectHeart, null, this)
 
-
     game.physics.arcade.overlap (player, diamonds, collectDiamond, null, this)
     //make function for collectDiamond
-
-
-  //collectDiamond function () {} when the player hits a diamond add 1,000 points to her score, AND
-  //drop 15 or plus stars on the screen. like this
-  // *
-  //  *
-  //   *
-  //    *
-  //     *
-  //      *
-  //       *
-  //        *
-  //         *
-  //          *
-  //           *
-  //            *
 
     player.body.velocity.x = 0;
     if (cursors.left.isDown) {
