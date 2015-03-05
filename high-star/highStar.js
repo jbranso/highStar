@@ -396,7 +396,7 @@ highStar.gameState.prototype = {
 
 var game = new Phaser.Game(100%, 100%, Phaser.AUTO, 'highStar' );
 
-game.state.add('gameState', P2Game.StateA);
+game.state.add('gameState', P2Game.gameState);
 game.state.add('StateB', P2Game.StateB);
 game.state.add('StateC', P2Game.StateC);
 
