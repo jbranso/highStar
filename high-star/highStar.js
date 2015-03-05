@@ -91,8 +91,8 @@ highStar.gameState.prototype = {
   //make function for collectHeart
   collectHeart: function (player, heart) {
     this.heart.kill();
-    this += 1;
-    this.text = 'Lives: ' + lives;
+    this.lives += 1;
+    this.text = 'Lives: ' + this.lives;
   },
 
   collectDiamond: function (player, diamond) {
@@ -107,10 +107,10 @@ highStar.gameState.prototype = {
     }
     function createATempStar () {
       //if there is no original tempStar, create it.
-      if (x < game.world.width / 2) {
-        this = this.stars.create (this.x + this.i * 20, 0, 'star');
-      } else if (x > game.world.width / 2) {
-        this = this.stars.create (this.x - this.i * 20, 0, 'star');
+      if (this.x < (game.world.width / 2)) {
+        this.star = this.stars.create (this.x + this.i * 20, 0, 'star');
+      } else if (this.x  > (game.world.width / 2)) {
+        this.star = this.stars.create (this.x - this.i * 20, 0, 'star');
       }
       this.i++;
       this.body.gravity.y = 300;
@@ -120,7 +120,7 @@ highStar.gameState.prototype = {
 
     function recycleATempStar () {
       //if there is no original tempStar, create it.
-      this = this.getFirstDead ();
+      this.star = this.getFirstDead ();
       if (this < game.world.width / 2) {
         this.reset (this.x + this.i * 20, 0);
       } else if (this.x > game.world.width / 2) {
