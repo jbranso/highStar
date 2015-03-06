@@ -58,25 +58,50 @@ highStar.gameState.prototype = {
     this.load.image ( 'restart', 'assets/restart.png' );
   },
 
-  // create: function () {
-  //   // all this code needs work //help wanted
-  //   this.ledges = this.game.group.createMultiple (4, 'ground' );
-  //   this.ledge.width = this.randomLength[ Math.floor (Math.random() * 3) ];
-  //   this.ledge.body.immovable = true;
-  //   this.ledge.checkWorldBounds = true;
-  //   this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-  //   //If this is the first time you are drawing a ledge
-  //   this.ledge = this.ledges.getFirstDead ();
-  //   this.ledge.reset ( this.x0, this.y0 );
-  //   // this.ledge = this.ledges.getFirstDead ();
-  //   // this.ledge.reset ( this.x0, this.y0 );
-  //   // this.ledge = this.ledges.getFirstDead ();
-  //   // this.ledge.reset ( this.x0, this.y0 );
-  //   // this.ledge.reset ( this.x1, this.y1 );
-  //   // this.ledge.reset ( this.x2, this.y2 );
-  //   // this.ledge.reset ( this.x3, this.y3 );
-  //   // this.ledge.reset ( this.x4, this.y4 );
-  // },
+  addNewStar: function (stars, star) {
+    if (this.stars.children.length < 99 ) {
+      this.star = this.stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
+      this.star.body.gravity.y = 300;
+      this.star.checkWorldBounds = true;
+      this.star.outOfBoundsKill = true;
+    } else {
+      star.recycleStar ();
+    }
+  },
+
+  addNewRock: function (rock) {
+    this.rock = this.rocks.create ( Math.floor (Math.random() * game.world.width ), 0, 'rock');
+    this.rock.body.gravity.y = 300;
+    this.rock.checkWorldBounds = true;
+    this.rock.outOfBoundsKill = true;
+  },
+
+  addNewHeart: function (heart) {
+    this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
+    this.heart.body.gravity.y = 300;
+    this.heart.checkWorldBounds = true;
+    this.heart.outOfBoundsKill = true;
+  },
+
+  addNewDiamond: function (diamond) {
+    this.diamond = this.diamonds.create ( Math.floor (Math.random() * game.world.width ), 0, 'diamond');
+    this.diamond.body.gravity.y = 300;
+    this.diamond.checkWorldBounds = true;
+    this.diamond.outOfBoundsKill = true;
+  },
+
+  createATempStar: function (player, star) {
+    //if there is no original tempStar, create it.
+    if (this.x < (game.world.width / 2)) {
+      this.star = this.stars.create (this.x + this.i * 20, 0, 'star');
+    } else if (this.x  > (game.world.width / 2)) {
+      this.star = this.stars.create (this.x - this.i * 20, 0, 'star');
+    }
+    this.i++;
+    this.star.body.gravity.y = 300;
+    this.checkWorldBounds = true;
+    this.outOfBoundsKill = true;
+  },
 
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
@@ -99,33 +124,6 @@ highStar.gameState.prototype = {
     this.text = 'Lives: ' + this.lives;
   },
 
-  createATempStar: function (player, star) {
-      //if there is no original tempStar, create it.
-      if (this.x < (game.world.width / 2)) {
-        this.star = this.stars.create (this.x + this.i * 20, 0, 'star');
-      } else if (this.x  > (game.world.width / 2)) {
-        this.star = this.stars.create (this.x - this.i * 20, 0, 'star');
-      }
-      this.i++;
-      this.star.body.gravity.y = 300;
-      this.checkWorldBounds = true;
-      this.outOfBoundsKill = true;
-  },
-
-  recycleATempStar: function () {
-      //if there is no original tempStar, create it.
-      this.star = this.getFirstDead ();
-      if (this < game.world.width / 2) {
-        this.reset (this.x + this.i * 20, 0);
-      } else if (this.x > game.world.width / 2) {
-        this.reset (this.x - this.i * 20, 0);
-      }
-      this.i++;
-      this.body.gravity.y = 300;
-      this.checkWorldBounds = true;
-      this.outOfBoundsKill = true;
-    },
-
   collectDiamond: function (player, diamond) {
     this.diamond.kill();
     this.x = Math.floor (player.position.x);
@@ -146,6 +144,59 @@ highStar.gameState.prototype = {
   ledgeSetWidth: function ( ledge ) {
     this.ledge.scale.setTo (2, 1);
     this.ledge.width = this.ledgeWidth;
+  },
+
+  recycleStar: function (stars) {
+    this.star = this.stars.getFirstDead ();
+    this.star.reset (Math.floor (Math.random() * this.game.world.width ), 0);
+  },
+
+  recycleATempStar: function (stars) {
+    //if there is no original tempStar, create it.
+    this.stars = this.getFirstDead ();
+    if (this < game.world.width / 2) {
+      this.reset (this.x + this.i * 20, 0);
+    } else if (this.x > game.world.width / 2) {
+      this.reset (this.x - this.i * 20, 0);
+    }
+    this.i++;
+    this.body.gravity.y = 300;
+    this.checkWorldBounds = true;
+    this.outOfBoundsKill = true;
+  },
+
+  recycleLedge: function (ledge) {
+    //  Move the alien to the top of the screen again
+    switch (this.ledge.ledgeXPosition) {
+    case "x0":
+      this.ledge.reset(this.x1, 0);
+      this.ledgeXPosition = "x1";
+      break;
+    case "x1":
+      if (Math.floor ( Math.random() * 2)) {
+        this.ledge.reset(this.x0, 0);
+        this.ledgeXPosition = "x0";
+      } else {
+        this.ledge.reset(this.x2, 0);
+        this.ledgeXPosition = "x2";
+      }
+      break;
+    case "x2":
+      if (Math.floor ( Math.random() * 2)) {
+        this.ledge.reset(this.x1, 0);
+        this.ledgeXPosition = "x1";
+      } else {
+        this.ledge.reset(this.x3, 0);
+        this.ledgeXPosition = "x3";
+      }
+      break;
+    case "x3":
+      ledge.reset(this.x2, 0);
+      this.ledgeXPosition = "x2";
+      break;
+    default:
+      alert ("your switch statement is broken");
+    }
   },
 
   create: function () {
@@ -198,60 +249,27 @@ highStar.gameState.prototype = {
     this.ledge.width = this.ledgeWidth;
     this.ledge.body.immovable = true;
     this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
 
-    this.ledge = this.ledges.create (this.x1, this.y2, 'ground');
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge = this.ledges.create (this.x1, this.y2, 'ground');
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
 
-    this.ledge = this.ledges.create (this.x2, this.y1, 'ground');
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge = this.ledges.create (this.x2, this.y1, 'ground');
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
 
-    this.ledge = this.ledges.create (this.x3, this.y0, 'ground');
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledgeXPosition = "x3";
-    this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge = this.ledges.create (this.x3, this.y0, 'ground');
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // this.ledgeXPosition = "x3";
+    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
 
-    function recycleLedge(ledge) {
-      //  Move the alien to the top of the screen again
-      switch (this.ledgeXPosition) {
-      case "x0":
-        this.ledge.reset(this.x1, 0);
-        this.ledgeXPosition = "x1";
-        break;
-      case "x1":
-        if (Math.floor ( Math.random() * 2)) {
-          this.ledge.reset(this.x0, 0);
-          this.ledgeXPosition = "x0";
-        } else {
-          this.ledge.reset(this.x2, 0);
-          this.ledgeXPosition = "x2";
-        }
-        break;
-      case "x2":
-        if (Math.floor ( Math.random() * 2)) {
-          this.ledge.reset(this.x1, 0);
-          this.ledgeXPosition = "x1";
-        } else {
-          this.ledge.reset(this.x3, 0);
-          this.ledgeXPosition = "x3";
-        }
-        break;
-      case "x3":
-        ledge.reset(this.x2, 0);
-        this.ledgeXPosition = "x2";
-        break;
-      default:
-        alert ("your switch statement is broken");
-      }
-    }
 
     //how fast the player falls
     this.player.body.gravity.y = 600;
@@ -272,23 +290,8 @@ highStar.gameState.prototype = {
     this.stars.enableBody = true;
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-    this.starsTimer = this.game.time.events.loop(1009, addNewStar, this);
+    this.starsTimer = this.game.time.events.loop(1009, this.addNewStar, this);
 
-    function addNewStar () {
-      if (this.stars.children.length < 99 ) {
-        this.star = this.stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
-        this.star.body.gravity.y = 300;
-        this.star.checkWorldBounds = true;
-        this.star.outOfBoundsKill = true;
-      } else {
-        recycleStar ();
-      }
-    }
-
-    function recycleStar (stars) {
-      this.star = this.stars.getFirstDead ();
-      this.star.reset (Math.floor (Math.random() * this.game.world.width ), 0);
-    }
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
@@ -296,39 +299,17 @@ highStar.gameState.prototype = {
     this.rocks.enableBody = true;
     //add a timer that will add a new rock and place it randomly on the screen
     //in the addNewRock, function, subtract 1 from the lives variable
-    this.rocksTimer = this.game.time.events.loop (30011, addNewRock, this);
-
-    function addNewRock () {
-      this.rock = this.rocks.create ( Math.floor (Math.random() * game.world.width ), 0, 'rock');
-      this.rock.body.gravity.y = 300;
-      this.rock.checkWorldBounds = true;
-      this.rock.outOfBoundsKill = true;
-    }
+    this.rocksTimer = this.game.time.events.loop (30011, this.addNewRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
 
     this.hearts = game.add.group ();
     this.hearts.enableBody = true ;
-    this.heartsTimer = game.time.events.loop (60000, addNewHeart, this);
-
-    function addNewHeart () {
-      this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
-      this.heart.body.gravity.y = 300;
-      this.heart.checkWorldBounds = true;
-      this.heart.outOfBoundsKill = true;
-    }
+    this.heartsTimer = game.time.events.loop (60000, this.addNewHeart, this);
 
     this.diamonds = game.add.group ();
     this.diamonds.enableBody = true ;
-    this.diamondsTimer = game.time.events.loop (10007, addNewDiamond, this);
-
-    function addNewDiamond () {
-      this.diamond = this.diamonds.create ( Math.floor (Math.random() * game.world.width ), 0, 'diamond');
-      this.diamond.body.gravity.y = 300;
-      this.diamond.checkWorldBounds = true;
-      this.diamond.outOfBoundsKill = true;
-    }
-
+    this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
@@ -382,6 +363,9 @@ highStar.gameState.prototype = {
 };
 
 
+highStar.gameEnd = function (game) {
+
+};
 
 highStar.gameEnd.prototype = {
 
@@ -390,7 +374,7 @@ highStar.gameEnd.prototype = {
 var game = new Phaser.Game('100%', '100%', Phaser.AUTO, 'highStar' );
 
 game.state.add('gameState', highStar.gameState);
-game.state.add('gameEnd', highStar.StateB);
+game.state.add('gameEnd', highStar.gameEnd);
 game.state.add('StateC', highStar.StateC);
 
 game.state.start('gameState');
