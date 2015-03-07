@@ -7,8 +7,9 @@ highStar.gameState = function (game) {
   this.platforms;
   this.ledges;
   this.ledge;
-  this.ledgeVelocity = 50;
-  // the ledgePosition with have 3 possible values:  0                   1                     2                  3
+  this.ledgeVelocity = 500;
+  // the ledgePosition with have 3 possible values:  "x0"                   "x1"                     "x2"                  "x3"
+  // It will be the X position on the screen where the highest ledge is.
   // It will determine where the next ledge will be put on the screen
   this.ledgeXPosition;
   // This will store thethis.alue of the ledges width
@@ -65,7 +66,7 @@ highStar.gameState.prototype = {
       this.star.checkWorldBounds = true;
       this.star.outOfBoundsKill = true;
     } else {
-      star.recycleStar ();
+      this.star.recycleStar ();
     }
   },
 
@@ -136,13 +137,7 @@ highStar.gameState.prototype = {
     }
   },
 
-  //add a velocity to all alive ledges
-  addVelocity: function ( ledge ) {
-    this.ledge.body.velocity.y = this.ledgeVelocity;
-  },
-
   ledgeSetWidth: function ( ledge ) {
-    this.ledge.scale.setTo (2, 1);
     this.ledge.width = this.ledgeWidth;
   },
 
@@ -165,9 +160,9 @@ highStar.gameState.prototype = {
     this.outOfBoundsKill = true;
   },
 
-  recycleLedge: function (ledge) {
+  recycleLedge: function (ledge, ledgeXPosition) {
     //  Move the alien to the top of the screen again
-    switch (this.ledge.ledgeXPosition) {
+    switch (this.ledgeXPosition) {
     case "x0":
       this.ledge.reset(this.x1, 0);
       this.ledgeXPosition = "x1";
@@ -196,6 +191,7 @@ highStar.gameState.prototype = {
       break;
     default:
       alert ("your switch statement is broken");
+      break;
     }
   },
 
@@ -237,38 +233,53 @@ highStar.gameState.prototype = {
     this.ground.body.immovable = true;
 
     //create a ledges group
-    this.ledges = game.add.group();
+    this.ledges = this.game.add.group();
     //add physics to the group
     this.ledges.enableBody = true;
     //ledges.forEach (ledgeSetWidth, this, false, this);
     game.physics.arcade.enable (this.ledges);
 
     // create the 4 ledges
-    //use arrays x [ ],  y [ ] to put this in a for loop help wanted
-    this.ledge = this.ledges.create (this.x0, this.y3, 'ground');
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    // //use arrays x [ ],  y [ ] to put this in a for loop help wanted
+    // this.ledge = this.ledges.create (this.x0, this.y3, 'ground');
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
 
     // this.ledge = this.ledges.create (this.x1, this.y2, 'ground');
     // this.ledge.width = this.ledgeWidth;
     // this.ledge.body.immovable = true;
     // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
 
     // this.ledge = this.ledges.create (this.x2, this.y1, 'ground');
     // this.ledge.width = this.ledgeWidth;
     // this.ledge.body.immovable = true;
     // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
 
     // this.ledge = this.ledges.create (this.x3, this.y0, 'ground');
     // this.ledge.width = this.ledgeWidth;
     // this.ledge.body.immovable = true;
     // this.ledge.checkWorldBounds = true;
-    // this.ledgeXPosition = "x3";
-    // this.ledge.events.onOutOfBounds.add(recycleLedge, this);
+    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    this.ledges.createMultiple (4, 'ground');
+
+    this.ledge = this.ledges.getFirstDead ();
+    this.ledge.reset (this.x0, this.y0);
+    this.ledge.width = this.ledgeWidth;
+    this.ledge.body.immovable = true;
+    this.ledge.checkWorldBounds = true;
+    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+
+    this.ledge = this.ledges.getFirstDead ();
+    this.ledge.reset (this.x1, this.y1);
+    this.ledge.width = this.ledgeWidth;
+    this.ledge.body.immovable = true;
+    this.ledge.checkWorldBounds = true;
+    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    this.ledgeXPosition = "x1";
 
 
     //how fast the player falls
@@ -315,9 +326,9 @@ highStar.gameState.prototype = {
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
 
   },
-
-  gameEnd: function () {
-    this.changeTimer = this.game.time.events.add(3000, this.gotoStateB, this);
+  //add a velocity to all alive ledges
+  addVelocity: function ( ledge ) {
+    this.ledge.body.velocity.y = this.ledgeVelocity;
   },
 
   update: function () {
@@ -338,6 +349,7 @@ highStar.gameState.prototype = {
     game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this)
     game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this)
     this.ledges.forEachAlive (this.addVelocity, this, this);
+    //this.ledges.forEachExists (this.addVelocity, this, this);
 
     //make function for collectDiamond
     this.player.body.velocity.x = 0;
@@ -359,7 +371,12 @@ highStar.gameState.prototype = {
     if (this.cursors.up.isDown && this.player.body.touching.down) {
       this.player.body.velocity.y = -450;
     }
-  }
+  },
+
+  gameEnd: function () {
+    this.changeTimer = this.game.time.events.add(3000, this.gameEnd, this);
+  },
+
 };
 
 
