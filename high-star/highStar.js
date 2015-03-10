@@ -62,13 +62,18 @@ highStar.gameState.prototype = {
   },
 
   addNewStar: function (stars, star) {
-    if (this.stars.children.length < 99 ) {
-      this.star = this.stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
-      this.star.body.gravity.y = 300;
-      this.star.checkWorldBounds = true;
-      this.star.outOfBoundsKill = true;
+    if (stars.children.length < 99 ) {
+      if ( Math.floor( Math.random() * 2)) {
+        star = stars.create ( Math.floor (this.player.position.x) + this.ledgeWidth / 3, 0, 'star');
+      } else {
+        star = stars.create ( Math.floor (this.player.position.x) - this.ledgeWidth / 3, 0, 'star');
+      }
+      //star = stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
+      star.body.gravity.y = 300;
+      star.checkWorldBounds = true;
+      star.outOfBoundsKill = true;
     } else {
-      this.star.recycleStar ();
+      star.recycleStar ();
     }
   },
 
@@ -106,9 +111,13 @@ highStar.gameState.prototype = {
     this.outOfBoundsKill = true;
   },
 
+  deleteGround: function (ground) {
+    this.ground.kill();
+  },
+
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
-    this.star.kill();
+    star.kill();
     this.score += 10;
     this.scoreText.text = 'Score: ' + this.score;
   },
@@ -233,6 +242,7 @@ highStar.gameState.prototype = {
     this.ground.height = game.world.height;
     //don't let the ground move
     this.ground.body.immovable = true;
+    this.groundTimer = this.game.time.events.loop(5000, this.deleteGround, this);
 
     //create a ledges group
     this.ledges = this.game.add.group();
@@ -303,8 +313,7 @@ highStar.gameState.prototype = {
     this.stars.enableBody = true;
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-    //this.starsTimer = this.game.time.events.loop(1009, this.addNewStar, this);
-
+    this.starsTimer = this.game.time.events.loop(1009, this.addNewStar, this, this.stars, this.star);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
