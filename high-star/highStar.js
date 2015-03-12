@@ -16,9 +16,11 @@ highStar.gameState = function (game) {
   this.ledgeXPosition;
   // This will store thethis.alue of the ledges width
   this.ledgeWidth;
+  this.star;
   this.stars;
   this.starsTimer;
   this.rocks;
+  this.rock;
   this.rocksTimer;
   this.hearts;
   this.heartsTimer;
@@ -61,20 +63,11 @@ highStar.gameState.prototype = {
     this.load.image ( 'restart', 'assets/restart.png' );
   },
 
-  addNewStar: function (stars, star) {
-    if (stars.children.length < 99 ) {
-      if ( Math.floor( Math.random() * 2)) {
-        star = stars.create ( Math.floor (this.player.position.x) + this.ledgeWidth / 3, 0, 'star');
-      } else {
-        star = stars.create ( Math.floor (this.player.position.x) - this.ledgeWidth / 3, 0, 'star');
-      }
-      //star = stars.create ( Math.floor (Math.random() * game.world.width ), 0, 'star');
-      star.body.gravity.y = 300;
-      star.checkWorldBounds = true;
-      star.outOfBoundsKill = true;
-    } else {
-      star.recycleStar ();
-    }
+  //The first argument is the child star
+  starsAddGravity: function (star) {
+    star.body.gravity.y = 300;
+    star.checkWorldBounds = true;
+    star.outOfBoundsKill = true;
   },
 
   addNewRock: function (rock) {
@@ -85,14 +78,23 @@ highStar.gameState.prototype = {
   },
 
   addNewHeart: function (heart) {
-    this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
+    if ( Math.floor( Math.random() * 2)) {
+      this.heart = this.hearts.create ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0, 'heart');
+    } else {
+      this.heart = this.hearts.create ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 3, 0, 'heart');
+    }
+    //this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
     this.heart.body.gravity.y = 300;
     this.heart.checkWorldBounds = true;
     this.heart.outOfBoundsKill = true;
   },
 
   addNewDiamond: function (diamond) {
-    this.diamond = this.diamonds.create ( Math.floor (Math.random() * game.world.width ), 0, 'diamond');
+    if ( Math.floor( Math.random() * 2)) {
+      this.diamond = this.diamonds.create ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0, 'diamond');
+    } else {
+      this.diamond = this.diamonds.create ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 2, 0, 'diamond');
+    }
     this.diamond.body.gravity.y = 300;
     this.diamond.checkWorldBounds = true;
     this.diamond.outOfBoundsKill = true;
@@ -107,8 +109,8 @@ highStar.gameState.prototype = {
     }
     this.i++;
     this.star.body.gravity.y = 300;
-    this.checkWorldBounds = true;
-    this.outOfBoundsKill = true;
+    this.star.checkWorldBounds = true;
+    this.star.outOfBoundsKill = true;
   },
 
   deleteGround: function (ground) {
@@ -152,23 +154,30 @@ highStar.gameState.prototype = {
     this.ledge.width = this.ledgeWidth;
   },
 
-  recycleStar: function (stars) {
-    this.star = this.stars.getFirstDead ();
-    this.star.reset (Math.floor (Math.random() * this.game.world.width ), 0);
+  recycleStar: function (dumpVariable, stars) {
+    var star = this.stars.getFirstDead ();
+    if ( Math.floor( Math.random() * 2)) {
+      star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
+    } else {
+      star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
+    }
+    star.body.gravity.y = 300;
+    star.checkWorldBounds = true;
+    star.outOfBoundsKill = true;
   },
 
   recycleATempStar: function (stars) {
     //if there is no original tempStar, create it.
-    this.stars = this.getFirstDead ();
-    if (this < game.world.width / 2) {
-      this.reset (this.x + this.i * 20, 0);
+    this.star = this.stars.getFirstDead ();
+    if (this.x < game.world.width / 2) {
+      this.star.reset (this.x + this.i * 20, 0);
     } else if (this.x > game.world.width / 2) {
-      this.reset (this.x - this.i * 20, 0);
+      this.star.reset (this.x - this.i * 20, 0);
     }
     this.i++;
-    this.body.gravity.y = 300;
-    this.checkWorldBounds = true;
-    this.outOfBoundsKill = true;
+    this.star.body.gravity.y = 300;
+    this.star.checkWorldBounds = true;
+    this.star.outOfBoundsKill = true;
   },
 
   recycleLedge: function (ledge, ledgeXPosition) {
@@ -276,22 +285,22 @@ highStar.gameState.prototype = {
     // this.ledge.body.immovable = true;
     // this.ledge.checkWorldBounds = true;
     // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-    this.ledges.createMultiple (4, 'ground');
+    // this.ledges.createMultiple (4, 'ground');
 
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x0, this.y0);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
+    // this.ledge = this.ledges.getFirstDead ();
+    // this.ledge.reset (this.x0, this.y0);
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // //this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
 
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x1, this.y1);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
-    this.ledgeXPosition = "x1";
+    // this.ledge = this.ledges.getFirstDead ();
+    // this.ledge.reset (this.x1, this.y1);
+    // this.ledge.width = this.ledgeWidth;
+    // this.ledge.body.immovable = true;
+    // this.ledge.checkWorldBounds = true;
+    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
+    // this.ledgeXPosition = "x1";
 
 
     //how fast the player falls
@@ -312,8 +321,11 @@ highStar.gameState.prototype = {
     //enable physics for this group
     this.stars.enableBody = true;
 
+    this.stars.createMultiple (99, 'star');
+    this.stars.forEach (this.starsAddGravity, this, this.stars);
+
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-    this.starsTimer = this.game.time.events.loop(1009, this.addNewStar, this, this.stars, this.star);
+    this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this, this.stars);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
@@ -321,17 +333,17 @@ highStar.gameState.prototype = {
     this.rocks.enableBody = true;
     //add a timer that will add a new rock and place it randomly on the screen
     //in the addNewRock, function, subtract 1 from the lives variable
-    //this.rocksTimer = this.game.time.events.loop (30011, this.addNewRock, this);
+    this.rocksTimer = this.game.time.events.loop (30011, this.addNewRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
 
     this.hearts = game.add.group ();
     this.hearts.enableBody = true ;
-    //this.heartsTimer = game.time.events.loop (60000, this.addNewHeart, this);
+    this.heartsTimer = game.time.events.loop (60000, this.addNewHeart, this);
 
     this.diamonds = game.add.group ();
     this.diamonds.enableBody = true ;
-    //this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
+    this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
@@ -343,6 +355,15 @@ highStar.gameState.prototype = {
     // for (var i = 0; i < 4; i++) {
     //   game.state.getCurrentState().ledges.getAt(i).body.velocity.y = ledgeVelocity1;
     // }
+  },
+
+  //Make all the falling tempStars fall right into the player
+  updateTempStarPositionX: function ( stars ) {
+    var star = stars.getFirstAlive();
+    while ( star != null) {
+      star.body.position.x = this.player.body.position.x;
+      star = stars.getFirstAlive();
+    }
   },
 
   update: function () {
@@ -364,6 +385,8 @@ highStar.gameState.prototype = {
     game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this)
     this.ledges.forEachAlive (this.addVelocity, this, this);
     //this.ledges.forEachExists (this.addVelocity, this, this);
+
+    this.stars.getFirstAlive (this.updateTempStarPositionX, this, this.stars);
 
     //make function for collectDiamond
     this.player.body.velocity.x = 0;
