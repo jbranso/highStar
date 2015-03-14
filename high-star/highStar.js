@@ -18,6 +18,8 @@ highStar.gameState = function (game) {
   this.ledgeWidth;
   this.star;
   this.stars;
+  this.tempStar;
+  this.tempStars;
   this.starsTimer;
   this.rocks;
   this.rock;
@@ -55,6 +57,7 @@ highStar.gameState.prototype = {
     this.load.spritesheet ( 'dude', 'assets/dude.png', 32, 48 );
     this.load.image ('ground', 'assets/platform.png');
     this.load.image ( 'star', 'assets/star.png' );
+    this.load.image ( 'tempStar', 'assets/star.png' );
     this.load.image ( 'baddie', 'assets/baddie.png' );
     this.load.image ( 'heart',  'assets/heart.png' );
     this.load.image ( 'sky', 'assets/sky.png' );
@@ -68,6 +71,19 @@ highStar.gameState.prototype = {
     star.body.gravity.y = 300;
     star.checkWorldBounds = true;
     star.outOfBoundsKill = true;
+  },
+
+  //The first argument is the child star
+  tempStarsAddGravity: function (tempStar) {
+    tempStar.body.gravity.y = 300;
+    tempStar.checkWorldBounds = true;
+    tempStar.outOfBoundsKill = true;
+  },
+
+  tempStarsAddGravity: function (tempStar) {
+    tempStar.body.gravity.y = 300;
+    tempStar.checkWorldBounds = true;
+    tempStar.outOfBoundsKill = true;
   },
 
   addNewRock: function (rock) {
@@ -103,14 +119,14 @@ highStar.gameState.prototype = {
   createATempStar: function (player, star) {
     //if there is no original tempStar, create it.
     if (this.x < (game.world.width / 2)) {
-      this.star = this.stars.create (this.x + this.i * 20, 0, 'star');
+      this.tempStar = this.tempStars.create (this.x + this.i * 20, 0, 'star');
     } else if (this.x  > (game.world.width / 2)) {
-      this.star = this.stars.create (this.x - this.i * 20, 0, 'star');
+      this.tempStar = this.tempStars.create (this.x - this.i * 20, 0, 'star');
     }
     this.i++;
-    this.star.body.gravity.y = 300;
-    this.star.checkWorldBounds = true;
-    this.star.outOfBoundsKill = true;
+    this.tempStar.body.gravity.y = 300;
+    this.tempStar.checkWorldBounds = true;
+    this.tempStar.outOfBoundsKill = true;
   },
 
   deleteGround: function (ground) {
@@ -120,6 +136,13 @@ highStar.gameState.prototype = {
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
     star.kill();
+    this.score += 10;
+    this.scoreText.text = 'Score: ' + this.score;
+  },
+
+  //When the star hits the player, kill increase the score
+  collectTempStar: function (player, tempStar) {
+    tempStar.kill();
     this.score += 10;
     this.scoreText.text = 'Score: ' + this.score;
   },
@@ -154,30 +177,30 @@ highStar.gameState.prototype = {
     this.ledge.width = this.ledgeWidth;
   },
 
-  recycleStar: function (dumpVariable, stars) {
-    var star = this.stars.getFirstDead ();
+  recycleStar: function (dumpVariable, tempStars) {
+    var tempStar = this.tempStars.getFirstDead ();
     if ( Math.floor( Math.random() * 2)) {
-      star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
+      tempStar.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
     } else {
-      star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
+      tempStar.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
     }
-    star.body.gravity.y = 300;
-    star.checkWorldBounds = true;
-    star.outOfBoundsKill = true;
+    tempStar.body.gravity.y = 300;
+    tempStar.checkWorldBounds = true;
+    tempStar.outOfBoundsKill = true;
   },
 
-  recycleATempStar: function (stars) {
+  recycleATempStar: function (tempStars) {
     //if there is no original tempStar, create it.
-    this.star = this.stars.getFirstDead ();
+    this.tempStar = this.tempStars.getFirstDead ();
     if (this.x < game.world.width / 2) {
-      this.star.reset (this.x + this.i * 20, 0);
+      this.tempStar.reset (this.x + this.i * 20, 0);
     } else if (this.x > game.world.width / 2) {
-      this.star.reset (this.x - this.i * 20, 0);
+      this.tempStar.reset (this.x - this.i * 20, 0);
     }
     this.i++;
-    this.star.body.gravity.y = 300;
-    this.star.checkWorldBounds = true;
-    this.star.outOfBoundsKill = true;
+    this.tempStar.body.gravity.y = 300;
+    this.tempStar.checkWorldBounds = true;
+    this.tempStar.outOfBoundsKill = true;
   },
 
   recycleLedge: function (ledge, ledgeXPosition) {
@@ -327,6 +350,15 @@ highStar.gameState.prototype = {
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
     this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this, this.stars);
 
+    // make stars its own group
+    this.tempStars = game.add.group ();
+
+    //enable physics for this group
+    this.tempStars.enableBody = true;
+
+    this.tempStars.createMultiple (99, 'star');
+    this.tempStars.forEach (this.tempStarsAddGravity, this, this.TempStars);
+
     //make rocks its own group
     this.rocks = this.game.add.group ();
     //enable physics for the group
@@ -358,12 +390,8 @@ highStar.gameState.prototype = {
   },
 
   //Make all the falling tempStars fall right into the player
-  updateTempStarPositionX: function ( stars ) {
-    var star = stars.getFirstAlive();
-    while ( star != null) {
-      star.body.position.x = this.player.body.position.x;
-      star = stars.getFirstAlive();
-    }
+  updateTempStarPositionX: function ( tempStar ) {
+      tempStar.body.position.x = this.player.body.position.x;
   },
 
   update: function () {
@@ -386,7 +414,7 @@ highStar.gameState.prototype = {
     this.ledges.forEachAlive (this.addVelocity, this, this);
     //this.ledges.forEachExists (this.addVelocity, this, this);
 
-    this.stars.getFirstAlive (this.updateTempStarPositionX, this, this.stars);
+    this.tempStars.forEach (this.updateTempStarPositionX, this);
 
     //make function for collectDiamond
     this.player.body.velocity.x = 0;
