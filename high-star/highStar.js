@@ -80,53 +80,34 @@ highStar.gameState.prototype = {
     tempStar.outOfBoundsKill = true;
   },
 
-  tempStarsAddGravity: function (tempStar) {
-    tempStar.body.gravity.y = 300;
-    tempStar.checkWorldBounds = true;
-    tempStar.outOfBoundsKill = true;
+  recycleRock: function (rock) {
+    rock.reset ( Math.floor (Math.random() * game.world.width ), 0);
+    rock.body.gravity.y = 300;
+    rock.checkWorldBounds = true;
+    rock.outOfBoundsKill = true;
   },
 
-  addNewRock: function (rock) {
-    this.rock = this.rocks.create ( Math.floor (Math.random() * game.world.width ), 0, 'rock');
-    this.rock.body.gravity.y = 300;
-    this.rock.checkWorldBounds = true;
-    this.rock.outOfBoundsKill = true;
-  },
-
-  addNewHeart: function (heart) {
+  recycleHeart: function (heart) {
     if ( Math.floor( Math.random() * 2)) {
-      this.heart = this.hearts.create ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0, 'heart');
+      heart.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0);
     } else {
-      this.heart = this.hearts.create ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 3, 0, 'heart');
+      heart.reset  ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 3, 0);
     }
     //this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
-    this.heart.body.gravity.y = 300;
-    this.heart.checkWorldBounds = true;
-    this.heart.outOfBoundsKill = true;
+    heart.body.gravity.y = 300;
+    heart.checkWorldBounds = true;
+    heart.outOfBoundsKill = true;
   },
 
-  addNewDiamond: function (diamond) {
+  recycleDiamond: function (diamond) {
     if ( Math.floor( Math.random() * 2)) {
-      this.diamond = this.diamonds.create ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0, 'diamond');
+      diamond.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0);
     } else {
-      this.diamond = this.diamonds.create ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 2, 0, 'diamond');
+      diamond.reset ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 2, 0);
     }
-    this.diamond.body.gravity.y = 300;
-    this.diamond.checkWorldBounds = true;
-    this.diamond.outOfBoundsKill = true;
-  },
-
-  createATempStar: function (player, star) {
-    //if there is no original tempStar, create it.
-    if (this.x < (game.world.width / 2)) {
-      this.tempStar = this.tempStars.create (this.x + this.i * 20, 0, 'star');
-    } else if (this.x  > (game.world.width / 2)) {
-      this.tempStar = this.tempStars.create (this.x - this.i * 20, 0, 'star');
-    }
-    this.i++;
-    this.tempStar.body.gravity.y = 300;
-    this.tempStar.checkWorldBounds = true;
-    this.tempStar.outOfBoundsKill = true;
+    diamond.body.gravity.y = 300;
+    diamond.checkWorldBounds = true;
+    diamond.outOfBoundsKill = true;
   },
 
   deleteGround: function (ground) {
@@ -149,28 +130,24 @@ highStar.gameState.prototype = {
 
   //When the rock hits the player, kill increase the score
   collectRock: function (player, rock) {
-    this.rock.kill();
+    rock.kill();
     this.lives -= 1;
     this.scoreLives.text = 'Lives: ' + this.lives;
   },
 
   //make function for collectHeart
   collectHeart: function (player, heart) {
-    this.heart.kill();
+    heart.kill();
     this.lives += 1;
     this.text = 'Lives: ' + this.lives;
   },
 
   collectDiamond: function (player, diamond) {
-    this.diamond.kill();
+    diamond.kill();
     this.x = Math.floor (player.position.x);
     this.i = 1;
     // if stars already has 50+ stars, recyle 'em. Don't make more.
-    if (this.stars.children.length > 98 ) {
-      this.game.time.events.repeat(100, 15, this.recycleATempStar, this );
-    } else {
-      this.game.time.events.repeat(100, 15, this.createATempStar, this );
-    }
+    this.game.time.events.repeat(100, 15, this.recycleATempStar, this );
   },
 
   ledgeSetWidth: function ( ledge ) {
@@ -283,48 +260,22 @@ highStar.gameState.prototype = {
     //ledges.forEach (ledgeSetWidth, this, false, this);
     game.physics.arcade.enable (this.ledges);
 
-    // create the 4 ledges
-    // //use arrays x [ ],  y [ ] to put this in a for loop help wanted
-    // this.ledge = this.ledges.create (this.x0, this.y3, 'ground');
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    this.ledges.createMultiple (4, 'ground');
 
-    // this.ledge = this.ledges.create (this.x1, this.y2, 'ground');
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    this.ledge = this.ledges.getFirstDead ();
+    this.ledge.reset (this.x0, this.y0);
+    this.ledge.width = this.ledgeWidth;
+    this.ledge.body.immovable = true;
+    this.ledge.checkWorldBounds = true;
+    //this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
 
-    // this.ledge = this.ledges.create (this.x2, this.y1, 'ground');
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-
-    // this.ledge = this.ledges.create (this.x3, this.y0, 'ground');
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-    // this.ledges.createMultiple (4, 'ground');
-
-    // this.ledge = this.ledges.getFirstDead ();
-    // this.ledge.reset (this.x0, this.y0);
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // //this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
-
-    // this.ledge = this.ledges.getFirstDead ();
-    // this.ledge.reset (this.x1, this.y1);
-    // this.ledge.width = this.ledgeWidth;
-    // this.ledge.body.immovable = true;
-    // this.ledge.checkWorldBounds = true;
-    // this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
-    // this.ledgeXPosition = "x1";
-
+    this.ledge = this.ledges.getFirstDead ();
+    this.ledge.reset (this.x1, this.y1);
+    this.ledge.width = this.ledgeWidth;
+    this.ledge.body.immovable = true;
+    this.ledge.checkWorldBounds = true;
+    //this.ledge.events.onOutOfBounds.add(this.recycleLedge, this, this.ledge, this.ledgeXPosition);
+    this.ledgeXPosition = "x1";
 
     //how fast the player falls
     this.player.body.gravity.y = 600;
@@ -356,26 +307,29 @@ highStar.gameState.prototype = {
     //enable physics for this group
     this.tempStars.enableBody = true;
 
-    this.tempStars.createMultiple (99, 'star');
+    this.tempStars.createMultiple (99, 'tempStar');
     this.tempStars.forEach (this.tempStarsAddGravity, this, this.TempStars);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
     //enable physics for the group
     this.rocks.enableBody = true;
+
     //add a timer that will add a new rock and place it randomly on the screen
     //in the addNewRock, function, subtract 1 from the lives variable
-    this.rocksTimer = this.game.time.events.loop (30011, this.addNewRock, this);
+
+    this.rocks.createMultiple (99, 'rock');
+    //this.rocksTimer = this.game.time.events.loop (30011, this.recycleRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
 
     this.hearts = game.add.group ();
     this.hearts.enableBody = true ;
-    this.heartsTimer = game.time.events.loop (60000, this.addNewHeart, this);
+    //this.heartsTimer = game.time.events.loop (60000, this.addNewHeart, this);
 
     this.diamonds = game.add.group ();
     this.diamonds.enableBody = true ;
-    this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
+    //this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
