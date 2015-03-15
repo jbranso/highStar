@@ -101,7 +101,8 @@ highStar.gameState.prototype = {
     heart.outOfBoundsKill = true;
   },
 
-  recycleDiamond: function (diamond) {
+  recycleDiamond: function (timer) {
+    var diamond = this.diamonds.getFirstDead();
     if ( Math.floor( Math.random() * 2)) {
       diamond.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0);
     } else {
@@ -345,7 +346,8 @@ highStar.gameState.prototype = {
 
     this.diamonds = game.add.group ();
     this.diamonds.enableBody = true ;
-    //this.diamondsTimer = game.time.events.loop (10007, this.addNewDiamond, this);
+    this.diamonds.createMultiple (20, 'diamond');
+    this.diamondsTimer = game.time.events.loop (10007, this.recycleDiamond, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
