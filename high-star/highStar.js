@@ -141,7 +141,7 @@ highStar.gameState.prototype = {
   collectHeart: function (player, heart) {
     heart.kill();
     this.lives += 1;
-    this.text = 'Lives: ' + this.lives;
+    this.scoreLives.text = 'Lives: ' + this.lives;
   },
 
   collectDiamond: function (player, diamond) {
