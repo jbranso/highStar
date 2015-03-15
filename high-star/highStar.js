@@ -1,7 +1,5 @@
 var highStar = {};
 
-var ledgeVelocity1 = 300;
-
 highStar.gameState = function (game) {
   this.player;
   //anything hard that will not move and the player can stand on.
@@ -9,7 +7,7 @@ highStar.gameState = function (game) {
   this.platforms;
   this.ledges;
   this.ledge;
-  this.ledgeVelocity = 500;
+  this.ledgeVelocity = 50;
   // the ledgePosition with have 3 possible values:  "x0"                   "x1"                     "x2"                  "x3"
   // It will be the X position on the screen where the highest ledge is.
   // It will determine where the next ledge will be put on the screen
@@ -157,16 +155,16 @@ highStar.gameState.prototype = {
     ledge.width = this.ledgeWidth;
   },
 
-  recycleStar: function (dumpVariable, tempStars) {
-    var tempStar = this.tempStars.getFirstDead ();
+  recycleStar: function (timer) {
+    var star = this.stars.getFirstDead ();
     if ( Math.floor( Math.random() * 2)) {
-      tempStar.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
+      star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
     } else {
-      tempStar.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
+      star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
     }
-    tempStar.body.gravity.y = 300;
-    tempStar.checkWorldBounds = true;
-    tempStar.outOfBoundsKill = true;
+    star.body.gravity.y = 300;
+    star.checkWorldBounds = true;
+    star.outOfBoundsKill = true;
   },
 
   recycleATempStar: function (tempStars) {
@@ -307,8 +305,16 @@ highStar.gameState.prototype = {
     // ---------------------- Falling things --------------------------- //
 
     // make stars its own group
-    this.stars = game.add.group ();
+    this.tempStars = this.game.add.group ();
 
+    //enable physics for this group
+    this.tempStars.enableBody = true;
+
+    this.tempStars.createMultiple (99, 'tempStar');
+    this.tempStars.forEach (this.tempStarsAddGravity, this);
+
+    // make stars its own group
+    this.stars = this.game.add.group ();
     //enable physics for this group
     this.stars.enableBody = true;
 
@@ -316,16 +322,7 @@ highStar.gameState.prototype = {
     this.stars.forEach (this.starsAddGravity, this);
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-    this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this, this.stars);
-
-    // make stars its own group
-    this.tempStars = game.add.group ();
-
-    //enable physics for this group
-    this.tempStars.enableBody = true;
-
-    this.tempStars.createMultiple (99, 'tempStar');
-    this.tempStars.forEach (this.tempStarsAddGravity, this);
+    this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
@@ -355,7 +352,7 @@ highStar.gameState.prototype = {
   },
   //add a velocity to all alive ledges
   addVelocity: function ( ledge ) {
-    ledge.body.velocity.y = ledgeVelocity1;
+    ledge.body.velocity.y = this.ledgeVelocity;
     // for (var i = 0; i < 4; i++) {
     //   game.state.getCurrentState().ledges.getAt(i).body.velocity.y = ledgeVelocity1;
     // }
@@ -381,8 +378,8 @@ highStar.gameState.prototype = {
     //college the player with any falling thing
     game.physics.arcade.overlap (this.player, this.stars, this.collectStar, null, this);
     game.physics.arcade.overlap (this.player, this.rocks, this.collectRock, null, this);
-    game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this)
-    game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this)
+    game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this);
+    game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
     //this.ledges.forEachExists (this.addVelocity, this, this);
 
