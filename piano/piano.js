@@ -4,6 +4,22 @@ var stage = new PIXI.Stage(0x66FF99);
 // this sets the size of the thing to the computer screen size
 //var renderer = PIXI.autoDetectRenderer(screen.width, screen.height);
 
+var a = new Audio('a.ogg');
+var b = new Audio('b.ogg');
+var c = new Audio('c.ogg');
+var d = new Audio('d.ogg');
+var e = new Audio('e.ogg');
+var f = new Audio('f.ogg');
+var g = new Audio('g.ogg');
+
+a.loop = true;
+b.loop = true;
+c.loop = true;
+d.loop = true;
+e.loop = true;
+f.loop = true;
+g.loop = true;
+
 // create a renderer instance: width first, height second
 // This sets the renderer to be the size of the browser window
 var canvasWidth = window.innerWidth;
@@ -108,18 +124,25 @@ keyboard.drawInitialKey = function (i) {
         alert ("the User clicked a key, then moved the mouse out of the stage");
       } else if ( (currentMouseX > keyboard.x ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 1)) {
         keyboard.colorKeyBlack(0);
+        a.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 1 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 2)) {
         keyboard.colorKeyBlack(1);
+        b.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 2 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 3)) {
         keyboard.colorKeyBlack(2);
+        c.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 3 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 4)) {
         keyboard.colorKeyBlack(3);
+        d.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 4 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 5)) {
         keyboard.colorKeyBlack(4);
+        e.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 5 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 6)) {
         keyboard.colorKeyBlack(5);
+        f.play();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 6 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 7)) {
         keyboard.colorKeyBlack(6);
+        g.play();
       }
     };
 
@@ -130,18 +153,25 @@ keyboard.drawInitialKey = function (i) {
         alert ("the User clicked a key, then moved the mouse out of the stage");
       } else if ( (currentMouseX > keyboard.x ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 1)) {
         keyboard.colorKeyWhite(0);
+        a.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 1 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 2)) {
         keyboard.colorKeyWhite(1);
+        b.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 2 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 3)) {
         keyboard.colorKeyWhite(2);
+        c.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 3 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 4)) {
         keyboard.colorKeyWhite(3);
+        d.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 4 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 5)) {
         keyboard.colorKeyWhite(4);
+        e.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 5 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 6)) {
         keyboard.colorKeyWhite(5);
+        f.pause();
       } else if ( (currentMouseX > keyboard.x + keyboard.keyWidth * 6 ) && (currentMouseX < keyboard.x + keyboard.keyWidth * 7)) {
         keyboard.colorKeyWhite(6);
+        g.pause();
       }
     };
 
