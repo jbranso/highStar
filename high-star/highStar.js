@@ -14,9 +14,13 @@ highStar.gameState = function (game) {
   this.ledgeXPosition;
   // This will store thethis.alue of the ledges width
   this.ledgeWidth;
+  //This is the individual star falling on the screen
   this.star;
+  //this is the object from which I can create more individual stars
   this.stars;
+  //This is the individual temp star that falls after I hit a diamond.
   this.tempStar;
+  //This is the object that produces more temp stars when I a diamond
   this.tempStars;
   this.starsTimer;
   this.rocks;
@@ -33,6 +37,7 @@ highStar.gameState = function (game) {
   this.lives = 5;
   this.scoreLives;
   this.score = 0;
+  //This is the variable that is displayed on the screen as my score
   this.scoreText;
   this.i = 1;
   this.x;
@@ -155,6 +160,7 @@ highStar.gameState.prototype = {
     ledge.width = this.ledgeWidth;
   },
 
+  //this makes stars fall from the top
   recycleStar: function (timer) {
     var star = this.stars.getFirstDead ();
     if ( Math.floor( Math.random() * 2)) {
@@ -167,6 +173,7 @@ highStar.gameState.prototype = {
     star.outOfBoundsKill = true;
   },
 
+  //This is the function that is called when the player hits a diamond
   recycleATempStar: function (tempStars) {
     //if there is no original tempStar, create it.
     this.tempStar = this.tempStars.getFirstDead ();
@@ -381,7 +388,6 @@ highStar.gameState.prototype = {
     game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this);
     game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
-    //this.ledges.forEachExists (this.addVelocity, this, this);
 
     this.tempStars.forEach (this.updateTempStarPositionX, this);
 

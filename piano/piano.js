@@ -1,3 +1,4 @@
+
 // create an new instance of a pixi stage
 var stage = new PIXI.Stage(0x66FF99);
 
