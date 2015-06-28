@@ -413,25 +413,10 @@ highStar.gameState.prototype = {
     }
   },
 
-  gameEnd: function () {
-    this.changeTimer = this.game.time.events.add(3000, this.gameEnd, this);
-  },
-
 };
 
-
-highStar.gameEnd = function (game) {
-
-};
-
-highStar.gameEnd.prototype = {
-
-};
 
 var game = new Phaser.Game('100%', '100%', Phaser.AUTO, 'highStar' );
 
 game.state.add('gameState', highStar.gameState);
-game.state.add('gameEnd', highStar.gameEnd);
-game.state.add('StateC', highStar.StateC);
-
 game.state.start('gameState');
