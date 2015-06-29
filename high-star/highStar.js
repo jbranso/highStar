@@ -56,19 +56,6 @@ highStar.gameState = function (game) {
 
 highStar.gameState.prototype = {
 
-  preload: function () {
-    this.load.spritesheet ( 'dude', 'assets/dude.png', 32, 48 );
-    this.load.image ('ground', 'assets/platform.png');
-    this.load.image ( 'star', 'assets/star.png' );
-    this.load.image ( 'tempStar', 'assets/star.png' );
-    this.load.image ( 'baddie', 'assets/baddie.png' );
-    this.load.image ( 'heart',  'assets/heart.png' );
-    this.load.image ( 'sky', 'assets/sky.png' );
-    this.load.image ( 'rock', 'assets/rock.png' );
-    this.load.image ( 'diamond', 'assets/diamond.png' );
-    this.load.image ( 'restart', 'assets/restart.png' );
-  },
-
   //The first argument is the child star
   starsAddGravity: function (star) {
     star.body.gravity.y = 300;
@@ -415,8 +402,6 @@ highStar.gameState.prototype = {
 
 };
 
-
-var game = new Phaser.Game('100%', '100%', Phaser.AUTO, 'highStar' );
 
 game.state.add('gameState', highStar.gameState);
 game.state.start('gameState');
