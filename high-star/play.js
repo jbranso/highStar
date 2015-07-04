@@ -7,7 +7,7 @@ var highStar = {
     this.platforms;
     this.ledges;
     this.ledge;
-    this.ledgeVelocity = 50;
+    this.ledgeVelocity = 80;
     // the ledgePosition with have 3 possible values:  "x0"                   "x1"                     "x2"                  "x3"
     // It will be the X position on the screen where the highest ledge is.
     // It will determine where the next ledge will be put on the screen
@@ -40,6 +40,7 @@ var highStar = {
     //This is the variable that is displayed on the screen as my score
     this.scoreText;
     this.i = 1;
+    //This is the player's x position
     this.x;
     //these will store the values of the various places on the screen I can put a ledge.
     // This is much easier than saying game.world.width / 2;
@@ -51,6 +52,13 @@ var highStar = {
     this.y1;
     this.y2;
     this.y3;
+    this.xArray = new Array();
+
+    this.x0 = 0;
+    this.x1 = this.game.world.width / 4;
+    this.x2 = this.game.world.width / 2;
+    this.x3 = this.game.world.width * ( 3 / 4);
+    this.yArray = new Array(4);
     this.restartImage;
   },
 
@@ -66,14 +74,53 @@ var highStar = {
     this.x1 = this.game.world.width / 4;
     this.x2 = this.game.world.width / 2;
     this.x3 = this.game.world.width * ( 3 / 4);
+
+    this.xArray[0] = this.x0;
+    this.xArray[1] = this.game.world.width / 4;
+    this.xArray[2] = this.game.world.width / 2;
+    this.xArray[3] = this.game.world.width * (3 / 4);
+
     this.y0 = 0;
     this.y1 = this.game.world.height / 4;
     this.y2 = this.game.world.height / 2;
     this.y3 = this.game.world.height * (3 / 4);
+
+    this.yArray[0] = 0;
+    this.yArray[1] = this.game.world.height / 4;
+    this.yArray[2] = this.game.world.height / 2;
+    this.yArray[3] = this.game.world.height * (3 / 4);
+
+    //this is for debugging information
+    for (var i = 0; i < 4; i++) {
+      console.log(this.xArray[i]);
+      console.log(this.yArray[i]);
+    }
+
     this.ledgeWidth = this.game.world.width / 4 / 1.5;
-    this.sky = this.add.sprite (0, 0, 'sky');
-    this.sky.width = this.game.world.width;
-    this.sky.height = this.game.world.height;
+
+    // this.sky = this.add.sprite (0, 0, 'sky');
+    // this.sky.width = this.game.world.width;
+    // this.sky.height = this.game.world.height;
+    //game.stage.backgroundColor = "#87CEEB";
+
+    var out = [];
+    var bmd = game.add.bitmapData(game.world.width, game.world.height);
+    bmd.addToWorld();
+
+    var y = 0;
+
+    for (var i = 0; i < game.world.height / 2; i++)
+    {
+      var c = Phaser.Color.interpolateColor(0x009acd, 0x87ceeb, game.world.height / 2, i);
+
+      // console.log(Phaser.Color.getWebRGB(c));
+
+      bmd.rect(0, y, game.world.width, game.world.height, Phaser.Color.getWebRGB(c));
+
+      out.push(Phaser.Color.getWebRGB(c));
+
+      y += 2;
+    }
 
     this.player = this.add.sprite(game.world.centerX, game.world.centerY, 'dude');
     this.game.physics.arcade.enable (this.player);
@@ -99,36 +146,20 @@ var highStar = {
     this.ledges.enableBody = true;
     //ledges.forEach (ledgeSetWidth, this, false, this);
     game.physics.arcade.enable (this.ledges);
-
+    //create 4 ledges
     this.ledges.createMultiple (4, 'ground');
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x0, this.y0);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
 
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x1, this.y1);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x2, this.y2);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-
-    this.ledge = this.ledges.getFirstDead ();
-    this.ledge.reset (this.x3, this.y3);
-    this.ledge.width = this.ledgeWidth;
-    this.ledge.body.immovable = true;
-    this.ledge.checkWorldBounds = true;
-    this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
-    this.ledgeXPosition = "x3";
+    for (var i = 0; i < 4; i++){
+      this.ledge = this.ledges.getFirstDead ();
+      this.ledge.reset (this.xArray[i], this.yArray[i]);
+      console.log ("this.ledge.reset (" + this.xArray[i] + "," + this.yArray[i]);
+      this.ledge.width = this.ledgeWidth;
+      //don't let the player jump and push the ledge down
+      this.ledge.body.immovable = true;
+      this.ledge.checkWorldBounds = true;
+      this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+    }
+    this.ledgeXPosition = "x0";
 
     //how fast the player falls
     this.player.body.gravity.y = 600;
@@ -201,16 +232,17 @@ var highStar = {
     game.physics.arcade.collide (this.player, this.ledges);
 
     // ---------------------- Falling things --------------------------- //
-    //college the player with any falling thing
+    //let the player collect any falling thing
     game.physics.arcade.overlap (this.player, this.stars, this.collectStar, null, this);
     game.physics.arcade.overlap (this.player, this.rocks, this.collectRock, null, this);
     game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this);
     game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this);
+    game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
 
     this.tempStars.forEach (this.updateTempStarPositionX, this);
 
-    //make function for collectDiamond
+    //dictate how the player moves
     this.player.body.velocity.x = 0;
     if (this.cursors.left.isDown) {
       // move to the left
@@ -365,7 +397,7 @@ var highStar = {
   },
 
   recycleLedge: function (ledge) {
-    //  Move the alien to the top of the screen again
+    //  Move the ledge to the top of the screen again
     switch (this.ledgeXPosition) {
     case "x0":
       ledge.reset(this.x1, 0);
@@ -394,7 +426,7 @@ var highStar = {
       this.ledgeXPosition = "x2";
       break;
     default:
-      alert ("your switch statement is broken");
+      alert ("your switch statement is broken and ledgeXPositon ==".concat(this.ledgeXPosition));
       break;
     }
   }

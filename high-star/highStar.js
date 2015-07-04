@@ -402,6 +402,5 @@ highStar.gameState.prototype = {
 
 };
 
-
 game.state.add('gameState', highStar.gameState);
 game.state.start('gameState');
