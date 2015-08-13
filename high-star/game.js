@@ -11,8 +11,8 @@ var game = new Phaser.Game('100%', '100%', Phaser.AUTO, 'highStar' );
 game.state.add('boot'     , bootState);
 game.state.add('load'     , loadState);
 game.state.add('menu'     , menuState);
-game.state.add('highStar' , highStar);
-game.state.add('lose'     , loseState);
+game.state.add('play'     , playState);
+//game.state.add('lose'     , loseState);
 game.state.add('win'      , winState);
 
 //After we have created the states we go ahead and call the boot state

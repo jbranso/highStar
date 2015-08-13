@@ -1,6 +1,8 @@
-var highStar = {
+var playState = {
 
   preload:function () {
+    //this will determine if the game is currently paused
+    this.pause;
     this.player;
     //anything hard that will not move and the player can stand on.
     this.ground;
@@ -66,6 +68,10 @@ var highStar = {
     //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
     // game.world.setBounds(0, 0, game.world.width, 2000);
     // game.camera.setPosition (0, 0);
+    var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
+    //When the player plesses the p key, we call the start function
+    pkey.onDown.add (this.pauseGame, this);
+    this.pause = false;
 
     // Set the physics system
     this.game.physics.startSystem (Phaser.Physics.ARCADE);
@@ -89,12 +95,6 @@ var highStar = {
     this.yArray[1] = this.game.world.height / 4;
     this.yArray[2] = this.game.world.height / 2;
     this.yArray[3] = this.game.world.height * (3 / 4);
-
-    //this is for debugging information
-    for (var i = 0; i < 4; i++) {
-      console.log(this.xArray[i]);
-      console.log(this.yArray[i]);
-    }
 
     this.ledgeWidth = this.game.world.width / 4 / 1.5;
 
@@ -164,8 +164,9 @@ var highStar = {
     //how fast the player falls
     this.player.body.gravity.y = 600;
     // if the player will collide with the world
-    this.player.body.collideWorldBounds = true;
-
+    //this.player.body.collideWorldBounds = true;
+    //Check to see if the player has left the world each frame, if he has then emit onOutOfBounds
+    this.player.checkWorldBounds = true;
     this.player.animations.add ('left', [0, 1, 2, 3], 10, true);
     this.player.animations.add ('right', [5, 6, 7, 8], 10, true);
 
@@ -220,6 +221,15 @@ var highStar = {
 
   },
 
+  pauseGame: function () {
+    console.log("pauseGame () pause: " + this.pause);
+    if (this.pause)
+      this.pause = false;
+    else
+      this.pause = true;
+    console.log("After if statement pause: " + this.pause);
+  },
+
   update: function () {
     // if(userClicksRestart() || (lives == 0)){ // Check to see the game needs restarting
     //if the user has lost all of his lives...
@@ -239,9 +249,25 @@ var highStar = {
     game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this);
     game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
-
     this.tempStars.forEach (this.updateTempStarPositionX, this);
 
+    //if the user has pushed p, do not execute code past this point
+    if (this.pause) {
+      this.ledges.forEachAlive (this.stopVelocity, this, this);
+      //stop the player from moving
+      this.player.animations.stop();
+      this.player.body.velocity.x = 0;
+      this.player.body.velocity.y = 0;
+      this.player.body.gravity.y = 0;
+      //make the player look at you.
+      this.player.frame = 4;
+      return;
+    }
+
+    //pausing stops the player from having gravity, so I need to add it in again
+    this.player.body.gravity.y = 600;
+    //If the player moves too far to the right or left, put him back in the world
+    this.player.events.onOutOfBounds.add(this.putPlayerInWorld, this);
     //dictate how the player moves
     this.player.body.velocity.x = 0;
     if (this.cursors.left.isDown) {
@@ -267,9 +293,59 @@ var highStar = {
   //add a velocity to all alive ledges
   addVelocity: function ( ledge ) {
     ledge.body.velocity.y = this.ledgeVelocity;
-    // for (var i = 0; i < 4; i++) {
-    //   game.state.getCurrentState().ledges.getAt(i).body.velocity.y = ledgeVelocity1;
-    // }
+  },
+
+  stopVelocity: function ( ledge ) {
+    ledge.body.velocity.y = 0;
+  },
+
+  //This funcition is called anytime the player is out of bounds.
+  //if the player has fallen below the world, it will take 1 life and respawn him
+  //if he is to the right of the world it will put him on the left and vice versa
+  putPlayerInWorld: function (player) {
+    //if the player is below the world, kill a life and respawn him
+    if (player.position.y > game.world.height) {
+      this.lives -= 1;
+      this.scoreLives.text = 'Lives: ' + this.lives;
+      //If there are 4 ledges that are alive, then we'll put the guy on the 3rd ledge
+      var living = this.ledges.countLiving();
+      //Put the ledge on the 3rd from the top
+      var yArray = [this.ledges.children[0].position.y, this.ledges.children[1].position.y, this.ledges.children[2].position.y, this.ledges.children[3].position.y];
+      var xArray = [this.ledges.children[0].position.x, this.ledges.children[1].position.x, this.ledges.children[2].position.x, this.ledges.children[3].position.x];
+      var largestX = Math.max.apply(Math, xArray);
+      //the y axis starts at 0 at the top of the screen.  so y == roughly 1000 is the bottom of the screen. Therefore we are
+      //interested in the lowest value of any living edge. This means the ledge is close to the top of the screen
+      var minimumY = Math.min.apply(Math, yArray);
+      //If there are 3 ledges then put him on the highest ledge this is very unlikely to ever happen. Most likely when the player
+      //dies there will exist 4 ledges on the screen
+      if (living == 3) {
+        this.player.position.x = largestX;
+        this.player.position.y = minimumY;
+        //if there are 4 ledges, put him on the 3rd ledge
+      } else if (living == 4) {
+        //this is also very unlikely to happen. most likely the player will not die when the highest ledge is at the top of the screen
+        if (minimumY == 0) {
+          this.player.position.x = this.ledges.children[3].position.x + 50;
+          this.player.position.y = this.ledges.children[3].position.y;
+          //this bit of code will probably be executed every time the player falls out of the screen
+        } else {
+          this.player.position.y = minimumY - 80;
+          //what is the x position of the highest ledge?
+          for(var i = 0; i <= 3; i++) {
+            if (this.ledges.children[i].position.y == minimumY)
+              this.player.position.x = this.ledges.children[i].position.x + 40;
+          }
+        }
+      } else {
+        alert ("Not 3 or 4 ledges are alive");
+      }
+      //if the player is to the left, put him on the right
+    } else if (player.position.x < 0 ) {
+      player.position.x = game.world.width;
+      //if the player is on the right, then put him on the left
+    } else if (player.position.x > game.world.width) {
+      player.position.x = 0;
+    }
   },
 
   //Make all the falling tempStars fall right into the player
@@ -400,8 +476,13 @@ var highStar = {
     //  Move the ledge to the top of the screen again
     switch (this.ledgeXPosition) {
     case "x0":
-      ledge.reset(this.x1, 0);
-      this.ledgeXPosition = "x1";
+      if (Math.floor ( Math.random() * 2)) {
+        ledge.reset(this.x1, 0);
+        this.ledgeXPosition = "x1";
+      } else {
+        this.ledgeXPosition = "x3";
+        ledge.reset(this.x3, 0);
+      }
       break;
     case "x1":
       if (Math.floor ( Math.random() * 2)) {
@@ -422,8 +503,13 @@ var highStar = {
       }
       break;
     case "x3":
-      ledge.reset(this.x2, 0);
-      this.ledgeXPosition = "x2";
+      if (Math.floor ( Math.random() * 2)) {
+        ledge.reset(this.x2, 0);
+        this.ledgeXPosition = "x2";
+      } else {
+        this.ledgeXPosition = "x0";
+        ledge.reset(this.x0, 0);
+      }
       break;
     default:
       alert ("your switch statement is broken and ledgeXPositon ==".concat(this.ledgeXPosition));

@@ -20,6 +20,6 @@ var loadState = {
 
   create: function () {
     //call the menu state
-    game.state.start('menu');
+    game.state.start('play');
   }
 };
