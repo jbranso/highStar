@@ -1,9 +1,13 @@
 var playState = {
 
   preload:function () {
-    //this will determine if the game is currently paused
-    this.pause;
+    //this value will be the smallest number, divisible by 100, that larger than how many seconds the user has been playing
+    //this game
+    this.timeDivisibleBy;
+    //the little phaser sprite
     this.player;
+    //a rocket sprite
+    this.rocket;
     //anything hard that will not move and the player can stand on.
     this.ground;
     this.platforms;
@@ -65,13 +69,14 @@ var playState = {
   },
 
   create: function () {
+    //start this out at 100
+    this.timeDivisibleBy = 20;
     //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
     // game.world.setBounds(0, 0, game.world.width, 2000);
     // game.camera.setPosition (0, 0);
     var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
     //When the player plesses the p key, we call the start function
     pkey.onDown.add (this.pauseGame, this);
-    this.pause = false;
 
     // Set the physics system
     this.game.physics.startSystem (Phaser.Physics.ARCADE);
@@ -124,6 +129,10 @@ var playState = {
 
     this.player = this.add.sprite(game.world.centerX, game.world.centerY, 'dude');
     this.game.physics.arcade.enable (this.player);
+    //how fast the player falls
+    this.player.body.gravity.y = 600;
+    // if the player will collide with the world
+    //this.player.body.collideWorldBounds = true;
 
     // the platforms group shall be any object that is not movable, and the player can stand on it.
     this.platforms = game.add.group ();
@@ -161,10 +170,11 @@ var playState = {
     }
     this.ledgeXPosition = "x0";
 
-    //how fast the player falls
-    this.player.body.gravity.y = 600;
-    // if the player will collide with the world
-    //this.player.body.collideWorldBounds = true;
+    this.rocket = this.add.sprite(0, -50, 'rocket');
+    this.game.physics.arcade.enable (this.rocket);
+    //how fast the rocket falls
+    this.rocket.body.gravity.y = 600;
+
     //Check to see if the player has left the world each frame, if he has then emit onOutOfBounds
     this.player.checkWorldBounds = true;
     this.player.animations.add ('left', [0, 1, 2, 3], 10, true);
@@ -222,12 +232,10 @@ var playState = {
   },
 
   pauseGame: function () {
-    console.log("pauseGame () pause: " + this.pause);
-    if (this.pause)
-      this.pause = false;
+    if (game.paused)
+      game.paused = false;
     else
-      this.pause = true;
-    console.log("After if statement pause: " + this.pause);
+      game.paused = true;
   },
 
   update: function () {
@@ -238,8 +246,9 @@ var playState = {
     }
 
     //collide the player with the platforms
-    game.physics.arcade.collide (this.player, this.platforms);
-    game.physics.arcade.collide (this.player, this.ledges);
+    game.physics.arcade.collide (this.player    , this.platforms);
+    game.physics.arcade.collide (this.player    , this.ledges);
+    game.physics.arcade.collide (this.rocket , this.ledges);
 
     // ---------------------- Falling things --------------------------- //
     //let the player collect any falling thing
@@ -250,19 +259,6 @@ var playState = {
     game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
     this.tempStars.forEach (this.updateTempStarPositionX, this);
-
-    //if the user has pushed p, do not execute code past this point
-    if (this.pause) {
-      this.ledges.forEachAlive (this.stopVelocity, this, this);
-      //stop the player from moving
-      this.player.animations.stop();
-      this.player.body.velocity.x = 0;
-      this.player.body.velocity.y = 0;
-      this.player.body.gravity.y = 0;
-      //make the player look at you.
-      this.player.frame = 4;
-      return;
-    }
 
     //pausing stops the player from having gravity, so I need to add it in again
     this.player.body.gravity.y = 600;
@@ -287,6 +283,19 @@ var playState = {
     //  allow the player to jump!!!
     if (this.cursors.up.isDown && this.player.body.touching.down) {
       this.player.body.velocity.y = -450;
+    }
+
+    //let the player move down faster is needed
+    if (this.cursors.down.isDown && !this.player.body.touching.down) {
+      this.player.body.velocity.y = 800;
+    }
+
+    //make the ledges fall faster but not faster than 100 as time goes on
+    if (this.ledgeVelocity < 100) {
+      if (game.time.totalElapsedSeconds() > this.timeDivisibleBy) {
+        this.ledgeVelocity += 5;
+        this.timeDivisibleBy += 20;
+      }
     }
   },
 
