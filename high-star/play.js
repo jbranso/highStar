@@ -6,6 +6,8 @@ var playState = {
     this.timeDivisibleBy;
     //the little phaser sprite
     this.player;
+    //I got the rocket from here: http://www.spriteland.com/sprites/rocket-sprite.html
+    //here are their terms of use: http://www.spriteland.com/about/terms.html
     //a rocket sprite
     this.rocket;
     //anything hard that will not move and the player can stand on.
@@ -170,7 +172,8 @@ var playState = {
     }
     this.ledgeXPosition = "x0";
 
-    this.rocket = this.add.sprite(0, -50, 'rocket');
+    this.rocket = this.add.sprite(0, -50, 'rocket', 1);
+    this.rocket.ledgeXPosition = "x0";
     this.game.physics.arcade.enable (this.rocket);
     //how fast the rocket falls
     this.rocket.body.gravity.y = 600;
@@ -248,15 +251,17 @@ var playState = {
     //collide the player with the platforms
     game.physics.arcade.collide (this.player    , this.platforms);
     game.physics.arcade.collide (this.player    , this.ledges);
-    game.physics.arcade.collide (this.rocket , this.ledges);
+    game.physics.arcade.collide (this.rocket    , this.ledges);
 
     // ---------------------- Falling things --------------------------- //
     //let the player collect any falling thing
-    game.physics.arcade.overlap (this.player, this.stars, this.collectStar, null, this);
-    game.physics.arcade.overlap (this.player, this.rocks, this.collectRock, null, this);
-    game.physics.arcade.overlap (this.player, this.hearts, this.collectHeart, null, this);
-    game.physics.arcade.overlap (this.player, this.diamonds, this.collectDiamond, null, this);
+    game.physics.arcade.overlap (this.player, this.stars,     this.collectStar,     null, this);
+    game.physics.arcade.overlap (this.player, this.rocks,     this.collectRock,     null, this);
+    game.physics.arcade.overlap (this.player, this.hearts,    this.collectHeart,    null, this);
+    game.physics.arcade.overlap (this.player, this.diamonds,  this.collectDiamond,  null, this);
     game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
+    //let the player get punished or rewarded if he hits the rocket
+    game.physics.arcade.overlap (this.player, this.rocket, this.collectRocket, null, this);
     this.ledges.forEachAlive (this.addVelocity, this, this);
     this.tempStars.forEach (this.updateTempStarPositionX, this);
 
@@ -297,6 +302,38 @@ var playState = {
         this.timeDivisibleBy += 20;
       }
     }
+
+    //move the rocket forward and back on the ledge if it is in the world
+    if (true) {
+      switch (this.rocket.ledgeXPosition) {
+      case "x0":
+        if (this.rocket.frame == 1) {
+          this.rocket.body.velocity.x = 100;
+          if (this.rocket.position.x >= this.ledgeWidth) {
+            this.rocket.frame = 0;
+            this.rocket.body.velocity.x = -100;
+          }
+          //if the has hit the left side of the screen coming back, then turn it around
+        } else { //turn the rocket around and patrol back
+          this.rocket.body.velocity.x = -100;
+          if (this.rocket.position.x <= 0) {
+            this.rocket.frame = 1;
+            this.rocket.body.velocity.x = 100;
+            this.rocket.position.x = 10;
+          }
+        }
+        break;
+      case "x1":
+        break;
+      case "x2":
+        break;
+      case "x3":
+        break;
+      }
+    }
+    //update the score and the lives section of the page
+    this.scoreText.text = 'Score: ' + this.score;
+    this.scoreLives.text = 'Lives: ' + this.lives;
   },
 
   //add a velocity to all alive ledges
@@ -315,7 +352,6 @@ var playState = {
     //if the player is below the world, kill a life and respawn him
     if (player.position.y > game.world.height) {
       this.lives -= 1;
-      this.scoreLives.text = 'Lives: ' + this.lives;
       //If there are 4 ledges that are alive, then we'll put the guy on the 3rd ledge
       var living = this.ledges.countLiving();
       //Put the ledge on the 3rd from the top
@@ -417,28 +453,24 @@ var playState = {
   collectStar: function (player, star) {
     star.kill();
     this.score += 10;
-    this.scoreText.text = 'Score: ' + this.score;
   },
 
   //When the star hits the player, kill increase the score
   collectTempStar: function (player, tempStar) {
     tempStar.kill();
     this.score += 10;
-    this.scoreText.text = 'Score: ' + this.score;
   },
 
   //When the rock hits the player, kill increase the score
   collectRock: function (player, rock) {
     rock.kill();
     this.lives -= 1;
-    this.scoreLives.text = 'Lives: ' + this.lives;
   },
 
   //make function for collectHeart
   collectHeart: function (player, heart) {
     heart.kill();
     this.lives += 1;
-    this.scoreLives.text = 'Lives: ' + this.lives;
   },
 
   collectDiamond: function (player, diamond) {
@@ -447,6 +479,20 @@ var playState = {
     this.i = 1;
     // if stars already has 50+ stars, recyle 'em. Don't make more.
     this.game.time.events.repeat(100, 15, this.recycleATempStar, this );
+  },
+
+  collectRocket: function (player, rocket) {
+    //if the player landed on top of the rocket, make the rocket disappear and give the player some points
+    if (player.body.touching.down && !player.body.touching.left && !player.body.touching.right) {
+      //push the rocket above what is visible
+      rocket.position.y = 2500;
+      //don't let the rocket fall back down
+      rocket.body.gravity.y = 0;
+      //increase the score
+      this.score += 30;
+    } else  { //make the player fall out of the world and subtract one life
+      player.position.y = 5000;
+    }
   },
 
   ledgeSetWidth: function ( ledge ) {
