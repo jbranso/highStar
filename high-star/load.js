@@ -9,14 +9,17 @@ var loadState = {
     this.load.spritesheet ( 'dude'     , 'assets/dude.png', 32, 48 );
     this.load.spritesheet ( 'rocket'   , 'assets/rocket.png', 59, 21 );
     this.load.image       ('ground'    , 'assets/platform.png');
-    this.load.image       ( 'star'     , 'assets/star.png' );
-    this.load.image       ( 'tempStar' , 'assets/star.png' );
-    this.load.image       ( 'baddie'   , 'assets/baddie.png' );
-    this.load.image       ( 'heart'    , 'assets/heart.png' );
-    this.load.image       ( 'sky'      , 'assets/sky.png' );
-    this.load.image       ( 'rock'     , 'assets/rock.png' );
-    this.load.image       ( 'diamond'  , 'assets/diamond.png' );
-    this.load.image       ( 'restart'  , 'assets/restart.png' );
+    //each frame started out as 24 wide and 22 high
+    //now each frame is 35 wide and 22 high
+    this.load.image       ( 'star'          , 'assets/star.png' );
+    this.load.spritesheet ( 'explodingStar' , 'assets/explodingStar.png', 35, 22);
+    this.load.image       ( 'tempStar'      , 'assets/star.png' );
+    this.load.image       ( 'baddie'        , 'assets/baddie.png' );
+    this.load.image       ( 'heart'         , 'assets/heart.png' );
+    this.load.image       ( 'sky'           , 'assets/sky.png' );
+    this.load.image       ( 'rock'          , 'assets/rock.png' );
+    this.load.image       ( 'diamond'       , 'assets/diamond.png' );
+    this.load.image       ( 'restart'       , 'assets/restart.png' );
   },
 
   create: function () {

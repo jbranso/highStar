@@ -1,0 +1,4 @@
+* make a the rocket be able to go back and forth on the ledges not just the x0 one
+* after a certain amount of time randomly make some of the ledges transparent after the player jumps on them
+  this will mean that after the player jumps on a particular ledge, it disappears, and the player will fall
+  through it if he tries to jump on it twice

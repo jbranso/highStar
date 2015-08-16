@@ -24,6 +24,8 @@ var playState = {
     this.ledgeWidth;
     //This is the individual star falling on the screen
     this.star;
+    //this is for the exploding star that is shown on screen when I take a star
+    this.explodingStar;
     //this is the object from which I can create more individual stars
     this.stars;
     //This is the individual temp star that falls after I hit a diamond.
@@ -206,6 +208,15 @@ var playState = {
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
     this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this);
+
+
+    this.explodingStar = this.add.sprite(0, 3000, 'explodingStar');
+    //let the exploding star interact in the arcade physics
+    this.game.physics.arcade.enable (this.explodingStar);
+    //how fast the player falls
+    this.explodingStar.body.gravity.y = 10;
+    //create an animation for the exploding star
+    this.explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 10, true);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
@@ -451,7 +462,12 @@ var playState = {
 
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
+    var x = star.position.x;
+    var y = star.position.y;
     star.kill();
+    this.explodingStar.position.x = x;
+    this.explodingStar.position.y = y;
+    this.explodingStar.animations.play ('explode');
     this.score += 10;
   },
 
