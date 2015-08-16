@@ -13,19 +13,24 @@ var playState = {
     //anything hard that will not move and the player can stand on.
     this.ground;
     this.platforms;
+    //this is the group from which the ledges are built
     this.ledges;
     this.ledge;
     this.ledgeVelocity = 80;
     // the ledgePosition with have 3 possible values:  "x0"                   "x1"                     "x2"                  "x3"
     // It will be the X position on the screen where the highest ledge is.
     // It will determine where the next ledge will be put on the screen
+    //This will be an array that stores the ledge X Positions. The first one will be the highest ledge. The 2nd will be the 2nd highest
+    //and so on
     this.ledgeXPosition;
-    // This will store thethis.alue of the ledges width
+    // This will store the value of the ledges width
     this.ledgeWidth;
     //This is the individual star falling on the screen
     this.star;
     //this is for the exploding star that is shown on screen when I take a star
     this.explodingStar;
+    //this will hold the exploding Stars group
+    this.explodingStars;
     //this is the object from which I can create more individual stars
     this.stars;
     //This is the individual temp star that falls after I hit a diamond.
@@ -172,7 +177,7 @@ var playState = {
       this.ledge.checkWorldBounds = true;
       this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
     }
-    this.ledgeXPosition = "x0";
+    this.ledgeXPosition = ["x0", "x1", "x2", "x3" ];
 
     this.rocket = this.add.sprite(0, -50, 'rocket', 1);
     this.rocket.ledgeXPosition = "x0";
@@ -209,14 +214,17 @@ var playState = {
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
     this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this);
 
-
-    this.explodingStar = this.add.sprite(0, 3000, 'explodingStar');
+    //make exploding Stars its own group
+    this.explodingStars = this.game.add.group ();
     //let the exploding star interact in the arcade physics
-    this.game.physics.arcade.enable (this.explodingStar);
-    //how fast the player falls
-    this.explodingStar.body.gravity.y = 10;
+    this.explodingStars.enableBody = true;
+    this.explodingStars.createMultiple (10, 'explodingStar');
+    //add gravity to all of the exploding stars
+    this.explodingStars.forEach (this.explodingStarsAddGravity, this);
     //create an animation for the exploding star
-    this.explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 10, true);
+    this.explodingStars.forEach (function (explodingStar) {
+      explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 10, false);
+    }, this);
 
     //make rocks its own group
     this.rocks = this.game.add.group ();
@@ -417,6 +425,13 @@ var playState = {
   },
 
   //The first argument is the child star
+  explodingStarsAddGravity: function (explodingStar) {
+    explodingStar.body.gravity.y = 300;
+    explodingStar.checkWorldBounds = true;
+    explodingStar.outOfBoundsKill = true;
+  },
+
+  //The first argument is the child star
   tempStarsAddGravity: function (tempStar) {
     tempStar.body.gravity.y = 300;
     tempStar.checkWorldBounds = true;
@@ -462,12 +477,15 @@ var playState = {
 
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
-    var x = star.position.x;
-    var y = star.position.y;
+    var x = star.position.x - 5;
+    var y = star.position.y - 5;
+    var yVelocity = star.body.velocity.y;
     star.kill();
-    this.explodingStar.position.x = x;
-    this.explodingStar.position.y = y;
-    this.explodingStar.animations.play ('explode');
+    //this.explodingStar.alive = true;
+    var explodingStar = this.explodingStars.getFirstDead ();
+    explodingStar.reset (x, y);
+    explodingStar.body.velocity.y = -200;
+    explodingStar.animations.play ('explode', null, false, true);
     this.score += 10;
   },
 

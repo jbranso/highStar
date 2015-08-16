@@ -12,7 +12,7 @@ var loadState = {
     //each frame started out as 24 wide and 22 high
     //now each frame is 35 wide and 22 high
     this.load.image       ( 'star'          , 'assets/star.png' );
-    this.load.spritesheet ( 'explodingStar' , 'assets/explodingStar.png', 35, 22);
+    this.load.spritesheet ( 'explodingStar' , 'assets/explodingStar.png', 35, 32);
     this.load.image       ( 'tempStar'      , 'assets/star.png' );
     this.load.image       ( 'baddie'        , 'assets/baddie.png' );
     this.load.image       ( 'heart'         , 'assets/heart.png' );
