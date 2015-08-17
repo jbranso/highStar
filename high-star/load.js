@@ -6,9 +6,10 @@ var loadState = {
                                      {font: '30px Arial', fill: '#ffffff' });
 
     //load all of your assets
-    this.load.spritesheet ( 'dude'     , 'assets/dude.png', 32, 48 );
-    this.load.spritesheet ( 'rocket'   , 'assets/rocket.png', 59, 21 );
-    this.load.image       ('ground'    , 'assets/platform.png');
+    this.load.spritesheet ( 'dude'            , 'assets/dude.png', 32, 48 );
+    this.load.spritesheet ( 'rocket'          , 'assets/rocket.png', 59, 21 );
+    this.load.spritesheet ( 'explodingRocket' , 'assets/explodingRocket.png', 69, 31 );
+    this.load.image       ('ground'           , 'assets/platform.png');
     //each frame started out as 24 wide and 22 high
     //now each frame is 35 wide and 22 high
     this.load.image       ( 'star'          , 'assets/star.png' );
