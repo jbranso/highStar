@@ -95,8 +95,8 @@ var playState = {
     this.timeDivisibleBy = 20;
     //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
     //delete these next two lines to fix things
-    game.world.setBounds(0, 0, 100000, 10000);
-    game.camera.view = new Phaser.Rectangle (game.world.centerX, 100000, game.camera.width, game.camera.height);
+    //game.world.setBounds(0, 0, 100000, 10000);
+    //game.camera.view = new Phaser.Rectangle (game.world.centerX, 100000, game.camera.width, game.camera.height);
     // game.camera.setPosition (0, 0);
     var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
     //When the player plesses the p key, we call the start function
@@ -125,7 +125,7 @@ var playState = {
     this.yArray[2] = this.game.world.height / 2;
     this.yArray[3] = this.game.world.height * (3 / 4);
 
-    //this.ledgeWidth = this.game.world.width / 4 / 1.5;
+    this.ledgeWidth = this.game.world.width / 4 / 1.5;
 
     // this.sky = this.add.sprite (0, 0, 'sky');
     // this.sky.width = this.game.world.width;
