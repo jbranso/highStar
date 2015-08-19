@@ -12,6 +12,8 @@ var playState = {
     this.rocket;
     //this will be the number of ledges that must fall before another rocket appears
     this.numberOfLedgesForNewRocket;
+    //this will be the maximum number of ledges that must pass before a new rocket is created
+    this.maxLedgesTilNewRocket;
     //the width of the rocket
     this.widthOfRocket;
     //the groups that rockes belongs to
@@ -88,10 +90,13 @@ var playState = {
   },
 
   create: function () {
+    //game.scale.fullScaleMode = Phaser.ScaleManager.SHOW_ALL;
     //start this out at 100
     this.timeDivisibleBy = 20;
     //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
-    // game.world.setBounds(0, 0, game.world.width, 2000);
+    //delete these next two lines to fix things
+    game.world.setBounds(0, 0, 100000, 10000);
+    game.camera.view = new Phaser.Rectangle (game.world.centerX, 100000, game.camera.width, game.camera.height);
     // game.camera.setPosition (0, 0);
     var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
     //When the player plesses the p key, we call the start function
@@ -120,7 +125,7 @@ var playState = {
     this.yArray[2] = this.game.world.height / 2;
     this.yArray[3] = this.game.world.height * (3 / 4);
 
-    this.ledgeWidth = this.game.world.width / 4 / 1.5;
+    //this.ledgeWidth = this.game.world.width / 4 / 1.5;
 
     // this.sky = this.add.sprite (0, 0, 'sky');
     // this.sky.width = this.game.world.width;
@@ -179,7 +184,6 @@ var playState = {
     for (var i = 0; i < 4; i++){
       this.ledge = this.ledges.getFirstDead ();
       this.ledge.reset (this.xArray[i], this.yArray[i]);
-      console.log ("this.ledge.reset (" + this.xArray[i] + "," + this.yArray[i]);
       this.ledge.width = this.ledgeWidth;
       //don't let the player jump and push the ledge down
       this.ledge.body.immovable = true;
@@ -194,18 +198,25 @@ var playState = {
     this.rockets.enableBody = true;
     game.physics.arcade.enable (this.rockets);
     //create 4 rockets
-    this.rockets.createMultiple (4, 'rocket');
+    this.rockets.createMultiple (10, 'rocket');
     this.widthOfRocket = 59;
+    this.numberOfLedgesForNewRocket = -1;
     this.rockets.forEach (function (rocket) {
       rocket.body.gravity.y = 600;
       rocket.checkWorldBounds = true;
       rocket.outOfBoundsKill = true;
+      this.maxLedgesTilNewRocket = 1;
+      //everytime a rocket is killed, add another rocket soonish
+      rocket.events.onKilled.add (function () {
+        this.numberOfLedgesForNewRocket = Math.ceil (Math.random() * this.maxLedgesTilNewRocket);
+      }, this);
     }, this);
 
-    this.rocket = this.rockets.getFirstDead ();
-    console.log("rocket: " + this.rocket);
-    this.rocket.ledgeXPosition = "x0";
-    this.rocket.reset(0, -15);
+    game.time.events.add(30000, function () {
+      this.numberOfLedgesForNewRocket = Math.ceil(Math.random() * this.maxLedgesTilNewRocket);
+      this.numberOfLedgesForNewRocket = 1;
+    },
+                         this);
 
     //create an exploding rocket
     this.explodingRockets = this.game.add.group ();
@@ -213,10 +224,10 @@ var playState = {
     this.explodingRockets.enableBody = true;
     game.physics.arcade.enable (this.explodingRockets);
     //create 4 exploding rockets
-    this.explodingRockets.createMultiple (4, 'explodingRocket');
+    this.explodingRockets.createMultiple (10, 'explodingRocket');
     this.explodingRockets.forEach (function (explodingRocket) {
       explodingRocket.body.gravity = 200;
-      explodingRocket.animations.add ('explode', [0, 1, 2, 3, 4], 10, false);
+      explodingRocket.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
     }, this);
 
 
@@ -272,7 +283,7 @@ var playState = {
 
     //create an animation for the exploding star
     this.explodingStars.forEach (function (explodingStar) {
-      explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 10, false);
+      explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
     }, this);
 
     //make rocks its own group
@@ -330,7 +341,11 @@ var playState = {
     game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
     //let the player get punished or rewarded if he hits the rocket
     game.physics.arcade.overlap (this.player, this.rockets, this.collectRocket, null, this);
-    this.ledges.forEachAlive (this.addVelocity, this, this);
+    //add velocity for all alive ledges
+    this.ledges.forEachAlive (function ( ledge ) {
+        ledge.body.velocity.y = this.ledgeVelocity;
+    }, this, this);
+
     this.tempStars.forEach (this.updateTempStarPositionX, this);
 
     //pausing stops the player from having gravity, so I need to add it in again
@@ -372,9 +387,9 @@ var playState = {
     }
 
     //move the rocket forward and back on the ledge if it is in the world
-    if (true) {
+    this.rockets.forEachAlive (function (rocket) {
       var x = null;
-      switch (this.rocket.ledgeXPosition) {
+      switch (rocket.ledgeXPosition) {
       case "x0":
         x = 0;
         break;
@@ -388,39 +403,31 @@ var playState = {
         x = this.x3;
         break;
       default:
-        alert ("Your update rocket switch statement is broked");
+        console.log ("Your update rocket switch statement is broked");
       }
       //if the rocket is facing left, then push it left
-      if (this.rocket.frame == 1) {
-        this.rocket.body.velocity.x = 100;
+      if (rocket.frame == 1) {
+        rocket.body.velocity.x = 100;
         //if the rocket is equal to or greater than the farthest x position on the ledge, then turn it around
-        if (this.rocket.position.x >= this.ledgeWidth + x - this.widthOfRocket) {
-          this.rocket.frame = 0;
-          this.rocket.body.velocity.x = -100;
+        if (rocket.position.x >= this.ledgeWidth + x - this.widthOfRocket) {
+          rocket.frame = 0;
+          rocket.body.velocity.x = -100;
         }
         //if the has hit the left side of the screen coming back, then turn it around
       } else { //turn the rocket around and patrol back
-        this.rocket.body.velocity.x = -100;
+        rocket.body.velocity.x = -100;
         //if the rocket is <= to the eastern most position on the ledge, then flip it around and push it back
-        if (this.rocket.position.x <= x) {
-          this.rocket.frame = 1;
-          this.rocket.body.velocity.x = 100;
-          this.rocket.position.x = 10;
+        if (rocket.position.x <= x) {
+          //console.log("ledge.position.x: " + x + " rocket.ledgeXPosition: " + rocket.ledgeXPosititon );
+          rocket.frame = 1;
+          rocket.body.velocity.x = 100;
         }
       }
-    }
+    }, this);
+
     //update the score and the lives section of the page
     this.scoreText.text = 'Score: ' + this.score;
     this.scoreLives.text = 'Lives: ' + this.lives;
-  },
-
-  //add a velocity to all alive ledges
-  addVelocity: function ( ledge ) {
-    ledge.body.velocity.y = this.ledgeVelocity;
-  },
-
-  stopVelocity: function ( ledge ) {
-    ledge.body.velocity.y = 0;
   },
 
   //This funcition is called anytime the player is out of bounds.
@@ -564,14 +571,11 @@ var playState = {
       explodingRocket.reset (x, y);
       //play the explode animation and kill it when finished
       explodingRocket.animations.play ('explode', null, false, true);
-      //don't let the rocket fall back down
-      rocket.body.gravity.y = 0;
       //increase the score
       this.score += 30;
     } else  { //make the player fall out of the world and subtract one life
       player.position.y = 5000;
     }
-    this.numberOfLedgesForNewRocket = Math.ceil (Math.random() * 15);
   },
 
   ledgeSetWidth: function ( ledge ) {
@@ -659,28 +663,36 @@ var playState = {
       }
       break;
     default:
-      alert ("your switch statement is broken and ledgeXPositon ==".concat(this.ledgeXPosition));
+      console.log ("your switch statement is broken and ledgeXPositon ==".concat(this.ledgeXPosition));
       break;
     }
 
     this.numberOfLedgesForNewRocket--;
+    //create a new rocket to mess with the user
     if (this.numberOfLedgesForNewRocket == 0) {
-      this.rocket = this.rockets.getFirstDead ();
+      //what's the position of the upper ledge?
       switch (this.ledgeXPosition [0]) {
+        //if it's far left, do this stuff
       case "x0":
-        this.rocket.reset (this.x0, -10);
+        this.rockets.getFirstDead ().ledgeXPosition = "x0";
+        this.rockets.getFirstDead ().reset (this.x0, -10);
         break;
       case "x1":
-        this.rocket.reset (this.x1, -10);
+        this.rockets.getFirstDead ().ledgeXPosition = "x1";
+        this.rockets.getFirstDead ().reset (this.x1, -10);
         break;
       case "x2":
-        this.rocket.reset (this.x2, -10);
+        this.rockets.getFirstDead ().ledgeXPosition = "x2";
+        this.rockets.getFirstDead ().reset (this.x2, -10);
         break;
       case "x3":
-        this.rocket.reset (this.x3, -10);
+        this.rockets.getFirstDead ().ledgeXPosition = "x3";
+        this.rockets.getFirstDead ().reset (this.x3, -10);
         break;
       }
-      this.numberOfLedgesForNewRocket = Math.ceil(Math.random() * 15);
+      this.maxLedgesTilNewRocket = Math.ceil(Math.random() * 30);
+      this.numberOfLedgesForNewRocket = Math.ceil (Math.random() * this.MaxLedgesTilNewRocket);
+
     }
   }
 };
