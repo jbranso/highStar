@@ -37,6 +37,8 @@ var playState = {
     this.ledgeXPosition;
     // This will store the value of the ledges width
     this.ledgeWidth;
+    //the ledges will be reset every time, but they will be randomly set to have this max width
+    this.maxLedgeWidth;
     //This is the individual star falling on the screen
     this.star;
     //this is for the exploding star that is shown on screen when I take a star
@@ -64,6 +66,10 @@ var playState = {
     this.lives = 5;
     this.scoreLives;
     this.score = 0;
+    //this will store the value for the top of the camera
+    this.topOfCamera;
+    //this will be the bottom of the camera
+    this.bottomOfCamera;
     //This is the variable that is displayed on the screen as my score
     this.scoreText;
     this.i = 1;
@@ -80,11 +86,6 @@ var playState = {
     this.y2;
     this.y3;
     this.xArray = new Array();
-
-    this.x0 = 0;
-    this.x1 = this.game.world.width / 4;
-    this.x2 = this.game.world.width / 2;
-    this.x3 = this.game.world.width * ( 3 / 4);
     this.yArray = new Array(4);
     this.restartImage;
   },
@@ -93,11 +94,13 @@ var playState = {
     //game.scale.fullScaleMode = Phaser.ScaleManager.SHOW_ALL;
     //start this out at 100
     this.timeDivisibleBy = 20;
-    //  Make our game world 2000x2000 pixels in size (the default is to match the game size)
+    //  Make our game world 1000ishx100000 pixels in size (the default is to match the game size)
     //delete these next two lines to fix things
-    //game.world.setBounds(0, 0, 100000, 10000);
-    //game.camera.view = new Phaser.Rectangle (game.world.centerX, 100000, game.camera.width, game.camera.height);
-    // game.camera.setPosition (0, 0);
+    game.world.setBounds(0, 0, game.camera.width, 100000);
+    //game.camera.view = new Phaser.Rectangle (0, 100000 - game.camera.height, game.camera.width, 100000);
+    game.camera.y = 100000 - game.camera.height;
+    this.topOfCamera = game.camera.y;
+    this.bottomOfCamera = game.camera.y + game.camera.height;
     var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
     //When the player plesses the p key, we call the start function
     pkey.onDown.add (this.pauseGame, this);
@@ -105,53 +108,45 @@ var playState = {
     // Set the physics system
     this.game.physics.startSystem (Phaser.Physics.ARCADE);
 
+    //this is the positions of the ledges when they respawn
     this.x0 = 0;
-    this.x1 = this.game.world.width / 4;
-    this.x2 = this.game.world.width / 2;
-    this.x3 = this.game.world.width * ( 3 / 4);
+    this.x1 = game.camera.view.width / 4;
+    this.x2 = game.camera.view.width / 2;
+    this.x3 = game.camera.view.width * ( 3 / 4);
+    this.y0 = this.topOfCamera;
+    this.y1 = this.topOfCamera - game.camera.height * (3 / 4);
+    this.y2 = this.topOfCamera - game.camera.height * (2 / 4) ;
+    this.y3 = this.topOfCamera - game.camera.height * (1 / 4);
 
     this.xArray[0] = this.x0;
-    this.xArray[1] = this.game.world.width / 4;
-    this.xArray[2] = this.game.world.width / 2;
-    this.xArray[3] = this.game.world.width * (3 / 4);
+    this.xArray[1] = this.x1;
+    this.xArray[2] = this.x2;
+    this.xArray[3] = this.x3;
 
-    this.y0 = 0;
-    this.y1 = this.game.world.height / 4;
-    this.y2 = this.game.world.height / 2;
-    this.y3 = this.game.world.height * (3 / 4);
-
-    this.yArray[0] = 0;
-    this.yArray[1] = this.game.world.height / 4;
-    this.yArray[2] = this.game.world.height / 2;
-    this.yArray[3] = this.game.world.height * (3 / 4);
-
-    this.ledgeWidth = this.game.world.width / 4 / 1.5;
+    this.yArray[0] = this.y0;
+    this.yArray[1] = this.y1;
+    this.yArray[2] = this.y2;
+    this.yArray[3] = this.y3;
 
     // this.sky = this.add.sprite (0, 0, 'sky');
     // this.sky.width = this.game.world.width;
-    // this.sky.height = this.game.world.height;
-    //game.stage.backgroundColor = "#87CEEB";
+    // this.sky.height = this.game.camera.view.height;
+    game.stage.backgroundColor = "#87CEEB";
 
-    var out = [];
-    var bmd = game.add.bitmapData(game.world.width, game.world.height);
-    bmd.addToWorld();
+    // var out = [];
+    // var bmd = game.add.bitmapData(game.world.width, game.world.height);
+    // bmd.addToWorld();
+    // var y = 0;
+    // for (var i = 0; i < game.world.height / 2; i++)
+    // {
+    //   var c = Phaser.Color.interpolateColor(0x009acd, 0x87ceeb, game.world.height / 2, i);
+    //   // console.log(Phaser.Color.getWebRGB(c));
+    //   bmd.rect(0, y, game.world.width, game.world.height, Phaser.Color.getWebRGB(c));
+    //   out.push(Phaser.Color.getWebRGB(c));
+    //   y += 2;
+    // }
 
-    var y = 0;
-
-    for (var i = 0; i < game.world.height / 2; i++)
-    {
-      var c = Phaser.Color.interpolateColor(0x009acd, 0x87ceeb, game.world.height / 2, i);
-
-      // console.log(Phaser.Color.getWebRGB(c));
-
-      bmd.rect(0, y, game.world.width, game.world.height, Phaser.Color.getWebRGB(c));
-
-      out.push(Phaser.Color.getWebRGB(c));
-
-      y += 2;
-    }
-
-    this.player = this.add.sprite(game.world.centerX, game.world.centerY, 'dude');
+    this.player = this.add.sprite(game.world.centerX, 100000, 'dude');
     this.game.physics.arcade.enable (this.player);
     //how fast the player falls
     this.player.body.gravity.y = 600;
@@ -163,34 +158,40 @@ var playState = {
     //enable physics for any object that is created in this group
     this.platforms.enableBody = true;
 
-    this.ground = this.platforms.create (0, game.world.height - game.world.height * .1, 'ground');
+    this.ground = this.platforms.create (0, 100000 - 50, 'ground');
     //scale the ground properly
-    //ground.scale.setTo (2, 2);
-    this.ground.width = game.world.width;
-    this.ground.height = game.world.height;
+    this.ground.width = game.camera.width;
+    this.ground.height = 50;
     //don't let the ground move
     this.ground.body.immovable = true;
-    this.groundTimer = this.game.time.events.loop(5000, this.deleteGround, this);
+    //kill the ground after 50 seconds
+    this.groundTimer = this.game.time.events.loop(50000, function (ground) {
+      this.ground.kill();
+    } , this);
     this.groundTimer.autoDestroy = true;
 
     //create a ledges group
+    this.ledgeWidth = 100;
+    this.ledgeMaxWidth = Math.floor(game.camera.width / 4 - (10 * 5));
     this.ledges = this.game.add.group();
     //add physics to the group
     this.ledges.enableBody = true;
     game.physics.arcade.enable (this.ledges);
     //create 4 ledges
     this.ledges.createMultiple (4, 'ground');
-
+    //place the ledges in the world
     for (var i = 0; i < 4; i++){
       this.ledge = this.ledges.getFirstDead ();
       this.ledge.reset (this.xArray[i], this.yArray[i]);
       this.ledge.width = this.ledgeWidth;
       //don't let the player jump and push the ledge down
       this.ledge.body.immovable = true;
-      this.ledge.checkWorldBounds = true;
-      this.ledge.events.onOutOfBounds.add(this.recycleLedge, this);
+      this.ledges.forEach (function (ledge) {
+        ledge.events.onKilled.add(this.recycleLedge, this);
+      }, this);
     }
     this.ledgeXPosition = ["x0", "x1", "x2", "x3"];
+    console.log(this.ledgeXPosition [0]);
 
     //create a rockets group
     this.rockets = this.game.add.group();
@@ -201,6 +202,7 @@ var playState = {
     this.rockets.createMultiple (10, 'rocket');
     this.widthOfRocket = 59;
     this.numberOfLedgesForNewRocket = -1;
+    //give the rocket gravity and kill 'em outside of the world bounds
     this.rockets.forEach (function (rocket) {
       rocket.body.gravity.y = 600;
       rocket.checkWorldBounds = true;
@@ -321,6 +323,8 @@ var playState = {
   },
 
   update: function () {
+    //I can make the camera move up the screen, but it messes with stuff
+    //game.camera.y -= 1;
     // if(userClicksRestart() || (lives == 0)){ // Check to see the game needs restarting
     //if the user has lost all of his lives...
     if ( this.lives == 0) {
@@ -335,18 +339,45 @@ var playState = {
     // ---------------------- Falling things --------------------------- //
     //let the player collect any falling thing
     game.physics.arcade.overlap (this.player, this.stars,     this.collectStar,     null, this);
-    game.physics.arcade.overlap (this.player, this.rocks,     this.collectRock,     null, this);
-    game.physics.arcade.overlap (this.player, this.hearts,    this.collectHeart,    null, this);
+    //When the rock hits the player, take one life and increase the score
+    game.physics.arcade.overlap (this.player, this.rocks,
+                                 function (player, rock) {
+                                   rock.kill();
+                                   this.lives -= 1;
+                                 }, null, this);
+    //make function for collectHeart if the player hits it
+    game.physics.arcade.overlap (this.player, this.hearts,
+                                 function (player, heart) {
+                                   heart.kill();
+                                   this.lives += 1;
+                                 }, null, this);
     game.physics.arcade.overlap (this.player, this.diamonds,  this.collectDiamond,  null, this);
     game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
     //let the player get punished or rewarded if he hits the rocket
     game.physics.arcade.overlap (this.player, this.rockets, this.collectRocket, null, this);
+    this.topOfCamera = game.camera.y;
+    this.bottomOfCamera = game.camera.y + game.camera.height;
+    if ((game.camera.y + (game.camera.height / 2)) > this.player.position.y) {
+      //if I fix this, then the game should work once again
+      game.camera.focusOn(this.player);
+    }
     //add velocity for all alive ledges
     this.ledges.forEachAlive (function ( ledge ) {
-        ledge.body.velocity.y = this.ledgeVelocity;
+      ledge.body.velocity.y = this.ledgeVelocity;
+      if ((ledge.position.y < (this.topOfCamera)) ||
+          (ledge.position.y > (this.bottomOfCamera)) ) {
+        //if the ledge is no longer in view of the camera kill it
+        ledge.kill();
+        //randomly change the ledge's width but make it at least 50px wide
+        ledge.width = Math.floor((this.ledgeMaxWidth - 50) * Math.random() + 50);
+      }
     }, this, this);
 
-    this.tempStars.forEach (this.updateTempStarPositionX, this);
+    this.tempStars.forEach (
+      //Make all the falling tempStars fall right into the player
+      function ( tempStar ) {
+        tempStar.body.position.x = this.player.body.position.x;
+      }, this);
 
     //pausing stops the player from having gravity, so I need to add it in again
     this.player.body.gravity.y = 600;
@@ -435,7 +466,7 @@ var playState = {
   //if he is to the right of the world it will put him on the left and vice versa
   putPlayerInWorld: function (player) {
     //if the player is below the world, kill a life and respawn him
-    if (player.position.y > game.world.height) {
+    if (player.position.y > this.bottomOfCamera) {
       this.lives -= 1;
       //If there are 4 ledges that are alive, then we'll put the guy on the 3rd ledge
       var living = this.ledges.countLiving();
@@ -478,27 +509,20 @@ var playState = {
     }
   },
 
-  //Make all the falling tempStars fall right into the player
-  updateTempStarPositionX: function ( tempStar ) {
-    tempStar.body.position.x = this.player.body.position.x;
-  },
-
   recycleRock: function (rock) {
-    var rock = this.rocks.getFirstDead();
-    rock.reset ( Math.floor (Math.random() * game.world.width ), 0);
+    rock = this.rocks.getFirstDead();
+    rock.reset ( Math.floor (Math.random() * game.world.width ), this.topOfCamera);
     rock.body.gravity.y = 300;
     rock.checkWorldBounds = true;
     rock.outOfBoundsKill = true;
   },
 
-  recycleHeart: function (timer) {
-    var heart = this.hearts.getFirstDead();
+  recycleHeart: function (heart) {
     if ( Math.floor( Math.random() * 2)) {
-      heart.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0);
+      heart.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, this.topOfCamera);
     } else {
-      heart.reset  ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 3, 0);
+      heart.reset  ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 3, this.topOfCamera);
     }
-    //this.heart = this.hearts.create ( Math.floor (Math.random() * game.world.width ), 0, 'heart');
     heart.body.gravity.y = 300;
     heart.checkWorldBounds = true;
     heart.outOfBoundsKill = true;
@@ -507,17 +531,13 @@ var playState = {
   recycleDiamond: function (timer) {
     var diamond = this.diamonds.getFirstDead();
     if ( Math.floor( Math.random() * 2)) {
-      diamond.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, 0);
+      diamond.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, this.topOfCamera);
     } else {
-      diamond.reset ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 2, 0);
+      diamond.reset ( Math.floor (this.player.position.x) - this.ledgeWidth * Math.random() / 2, this.topOfCamera);
     }
     diamond.body.gravity.y = 300;
     diamond.checkWorldBounds = true;
     diamond.outOfBoundsKill = true;
-  },
-
-  deleteGround: function (ground) {
-    this.ground.kill();
   },
 
   //When the star hits the player, kill increase the score
@@ -538,18 +558,6 @@ var playState = {
   collectTempStar: function (player, tempStar) {
     tempStar.kill();
     this.score += 10;
-  },
-
-  //When the rock hits the player, kill increase the score
-  collectRock: function (player, rock) {
-    rock.kill();
-    this.lives -= 1;
-  },
-
-  //make function for collectHeart
-  collectHeart: function (player, heart) {
-    heart.kill();
-    this.lives += 1;
   },
 
   collectDiamond: function (player, diamond) {
@@ -578,17 +586,13 @@ var playState = {
     }
   },
 
-  ledgeSetWidth: function ( ledge ) {
-    ledge.width = this.ledgeWidth;
-  },
-
   //this makes stars fall from the top
   recycleStar: function (timer) {
     var star = this.stars.getFirstDead ();
     if ( Math.floor( Math.random() * 2)) {
-      star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, 0);
+      star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, this.topOfCamera);
     } else {
-      star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, 0);
+      star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, this.topOfCamera);
     }
     star.body.gravity.y = 300;
     star.checkWorldBounds = true;
@@ -600,9 +604,9 @@ var playState = {
     //if there is no original tempStar, create it.
     this.tempStar = this.tempStars.getFirstDead ();
     if (this.x < game.world.width / 2) {
-      this.tempStar.reset (this.x + this.i * 20, 0);
+      this.tempStar.reset (this.x + this.i * 20, this.topOfCamera);
     } else if (this.x > game.world.width / 2) {
-      this.tempStar.reset (this.x - this.i * 20, 0);
+      this.tempStar.reset (this.x - this.i * 20, this.topOfCamera);
     }
     this.i++;
     this.tempStar.body.gravity.y = 300;
@@ -616,7 +620,7 @@ var playState = {
     switch (this.ledgeXPosition [0]) {
     case "x0":
       if (Math.floor ( Math.random() * 2)) {
-        ledge.reset(this.x1, 0);
+        ledge.reset(this.x1, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
         //make the first element of the array the reset ledge, because that ledge is the highest now.
@@ -625,39 +629,39 @@ var playState = {
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift ("x3");
-        ledge.reset(this.x3, 0);
+        ledge.reset(this.x3, this.topOfCamera);
       }
       break;
     case "x1":
       if (Math.floor ( Math.random() * 2)) {
-        ledge.reset(this.x0, 0);
+        ledge.reset(this.x0, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x0");
       } else {
-        ledge.reset(this.x2, 0);
+        ledge.reset(this.x2, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x2");
       }
       break;
     case "x2":
       if (Math.floor ( Math.random() * 2)) {
-        ledge.reset(this.x1, 0);
+        ledge.reset(this.x1, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x1");
       } else {
-        ledge.reset(this.x3, 0);
+        ledge.reset(this.x3, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x3");
       }
       break;
     case "x3":
       if (Math.floor ( Math.random() * 2)) {
-        ledge.reset(this.x2, 0);
+        ledge.reset(this.x2, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x2");
       } else {
-        ledge.reset(this.x0, 0);
+        ledge.reset(this.x0, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
         this.ledgeXPosition.unshift("x0");
       }
@@ -675,19 +679,19 @@ var playState = {
         //if it's far left, do this stuff
       case "x0":
         this.rockets.getFirstDead ().ledgeXPosition = "x0";
-        this.rockets.getFirstDead ().reset (this.x0, -10);
+        this.rockets.getFirstDead ().reset (this.x0, this.y0 - 10);
         break;
       case "x1":
         this.rockets.getFirstDead ().ledgeXPosition = "x1";
-        this.rockets.getFirstDead ().reset (this.x1, -10);
+        this.rockets.getFirstDead ().reset (this.x1, this.y1 - 10);
         break;
       case "x2":
         this.rockets.getFirstDead ().ledgeXPosition = "x2";
-        this.rockets.getFirstDead ().reset (this.x2, -10);
+        this.rockets.getFirstDead ().reset (this.x2, this.y2 - 10);
         break;
       case "x3":
         this.rockets.getFirstDead ().ledgeXPosition = "x3";
-        this.rockets.getFirstDead ().reset (this.x3, -10);
+        this.rockets.getFirstDead ().reset (this.x3, this.y3 - 10);
         break;
       }
       this.maxLedgesTilNewRocket = Math.ceil(Math.random() * 30);
