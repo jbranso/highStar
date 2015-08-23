@@ -150,8 +150,6 @@ var playState = {
     this.game.physics.arcade.enable (this.player);
     //how fast the player falls
     this.player.body.gravity.y = 600;
-    // if the player will collide with the world
-    //this.player.body.collideWorldBounds = true;
 
     // the platforms group shall be any object that is not movable, and the player can stand on it.
     this.platforms = game.add.group ();
@@ -165,10 +163,9 @@ var playState = {
     //don't let the ground move
     this.ground.body.immovable = true;
     //kill the ground after 50 seconds
-    this.groundTimer = this.game.time.events.loop(50000, function (ground) {
+    this.game.time.events.loop(50000, function (ground) {
       this.ground.kill();
     } , this);
-    this.groundTimer.autoDestroy = true;
 
     //create a ledges group
     this.ledgeWidth = 100;
@@ -205,8 +202,6 @@ var playState = {
     //give the rocket gravity and kill 'em outside of the world bounds
     this.rockets.forEach (function (rocket) {
       rocket.body.gravity.y = 600;
-      rocket.checkWorldBounds = true;
-      rocket.outOfBoundsKill = true;
       this.maxLedgesTilNewRocket = 1;
       //everytime a rocket is killed, add another rocket soonish
       rocket.events.onKilled.add (function () {
@@ -214,7 +209,7 @@ var playState = {
       }, this);
     }, this);
 
-    game.time.events.add(30000, function () {
+    game.time.events.add(300, function () {
       this.numberOfLedgesForNewRocket = Math.ceil(Math.random() * this.maxLedgesTilNewRocket);
       this.numberOfLedgesForNewRocket = 1;
     },
@@ -236,7 +231,6 @@ var playState = {
     //how fast the rocket falls
 
     //Check to see if the player has left the world each frame, if he has then emit onOutOfBounds
-    this.player.checkWorldBounds = true;
     this.player.animations.add ('left', [0, 1, 2, 3], 10, true);
     this.player.animations.add ('right', [5, 6, 7, 8], 10, true);
 
@@ -252,8 +246,6 @@ var playState = {
     this.tempStars.createMultiple (99, 'tempStar');
     this.tempStars.forEach (function (tempStar) {
       tempStar.body.gravity.y = 300;
-      tempStar.checkWorldBounds = true;
-      tempStar.outOfBoundsKill = true;
     }, this);
 
     // make stars its own group
@@ -263,8 +255,6 @@ var playState = {
     this.stars.createMultiple (99, 'star');
     this.stars.forEach (function (star) {
       star.body.gravity.y = 300;
-      star.checkWorldBounds = true;
-      star.outOfBoundsKill = true;
     }, this);
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
@@ -279,12 +269,6 @@ var playState = {
     //add gravity to all of the exploding stars
     this.explodingStars.forEach (function (explodingStar) {
       explodingStar.body.gravity.y = 300;
-      explodingStar.checkWorldBounds = true;
-      explodingStar.outOfBoundsKill = true;
-    }, this);
-
-    //create an animation for the exploding star
-    this.explodingStars.forEach (function (explodingStar) {
       explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
     }, this);
 
@@ -299,9 +283,7 @@ var playState = {
 
     this.rocks.forEach (function (rock) {
       rock.body.gravity.y = 300;
-      rock.checkWorldBounds = true;
-      rock.outOfBoundsKill = true;
-    });
+    }, this);
     this.rocksTimer = this.game.time.events.loop (30011, this.recycleRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
@@ -309,12 +291,18 @@ var playState = {
     this.hearts = game.add.group ();
     this.hearts.enableBody = true ;
     this.hearts.createMultiple (20, 'heart');
+    this.hearts.forEach (function (heart) {
+      heart.body.gravity.y = 300;
+    }, this);
     this.heartsTimer = this.game.time.events.loop (60013, this.recycleHeart, this);
 
     this.diamonds = game.add.group ();
     this.diamonds.enableBody = true ;
     this.diamonds.createMultiple (20, 'diamond');
     this.diamondsTimer = game.time.events.loop (10007, this.recycleDiamond, this);
+    this.diamonds.forEach (function (diamond) {
+      diamond.body.gravity.y = 300;
+    }, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
@@ -375,25 +363,23 @@ var playState = {
     //add velocity for all alive ledges
     this.ledges.forEachAlive (function ( ledge ) {
       ledge.body.velocity.y = this.ledgeVelocity;
-      if ((ledge.position.y < (this.topOfCamera)) ||
-          (ledge.position.y > (this.bottomOfCamera)) ) {
-        //if the ledge is no longer in view of the camera kill it
-        ledge.kill();
-        //randomly change the ledge's width but make it at least 50px wide
-        ledge.width = Math.floor((this.ledgeMaxWidth - 50) * Math.random() + 50);
-      }
+      //kill the sprite if it is outside of the camera bounds
+      this.killSprite(ledge);
     }, this, this);
 
-    this.tempStars.forEach (
+    this.tempStars.forEachAlive (
       //Make all the falling tempStars fall right into the player
       function ( tempStar ) {
         tempStar.body.position.x = this.player.body.position.x;
+        //if the sprite falls outside of the view of the camera, kill it
+        this.killSprite (tempStar);
       }, this);
 
     //pausing stops the player from having gravity, so I need to add it in again
     this.player.body.gravity.y = 600;
     //If the player moves too far to the right or left, put him back in the world
-    this.player.events.onOutOfBounds.add(this.putPlayerInWorld, this);
+    //if the player falls below the camera, kill 'em
+    this.killSprite(this.player);
     //dictate how the player moves
     this.player.body.velocity.x = 0;
     if (this.cursors.left.isDown) {
@@ -470,6 +456,16 @@ var playState = {
     //update the score and the lives section of the page
     this.scoreText.text = 'Score: ' + this.score;
     this.scoreLives.text = 'Lives: ' + this.lives;
+  },
+
+  killSprite: function (sprite) {
+    //if the sprite is above or below the top of the camera, kill it
+    if ((sprite.position.y < this.topOfCamera) || (sprite.position.y > this.bottomOfCamera)) {
+      sprite.kill();
+    //if the sprite is a ledge, then randomly set it's width to a random value
+    if (sprite.key == "ground")
+      sprite.width = Math.floor((this.ledgeMaxWidth - 50) * Math.random() + 50);
+    }
   },
 
   //This funcition is called anytime the player is out of bounds.
