@@ -114,9 +114,9 @@ var playState = {
     this.x2 = game.camera.view.width / 2;
     this.x3 = game.camera.view.width * ( 3 / 4);
     this.y0 = this.topOfCamera;
-    this.y1 = this.topOfCamera - game.camera.height * (3 / 4);
-    this.y2 = this.topOfCamera - game.camera.height * (2 / 4) ;
-    this.y3 = this.topOfCamera - game.camera.height * (1 / 4);
+    this.y1 = this.topOfCamera + game.camera.height * (1 / 4);
+    this.y2 = this.topOfCamera + game.camera.height * (2 / 4) ;
+    this.y3 = this.topOfCamera + game.camera.height * (3 / 4);
 
     this.xArray[0] = this.x0;
     this.xArray[1] = this.x1;
@@ -146,7 +146,7 @@ var playState = {
     //   y += 2;
     // }
 
-    this.player = this.add.sprite(game.world.centerX, 100000, 'dude');
+    this.player = this.add.sprite(game.world.centerX, 100000 - 100, 'dude');
     this.game.physics.arcade.enable (this.player);
     //how fast the player falls
     this.player.body.gravity.y = 600;
@@ -180,14 +180,14 @@ var playState = {
     //create 4 ledges
     this.ledges.createMultiple (4, 'ground');
     //place the ledges in the world
-    for (var i = 0; i < 4; i++){
+    for (var i = 0; i < 4; i++) {
       this.ledge = this.ledges.getFirstDead ();
       this.ledge.reset (this.xArray[i], this.yArray[i]);
       this.ledge.width = this.ledgeWidth;
       //don't let the player jump and push the ledge down
       this.ledge.body.immovable = true;
-      this.ledges.forEach (function (ledge) {
-        ledge.events.onKilled.add(this.recycleLedge, this);
+      this.ledges.forEach ( function (ledge) {
+        ledge.events.onKilled.add (this.recycleLedge, this);
       }, this);
     }
     this.ledgeXPosition = ["x0", "x1", "x2", "x3"];
@@ -260,7 +260,6 @@ var playState = {
     this.stars = this.game.add.group ();
     //enable physics for this group
     this.stars.enableBody = true;
-
     this.stars.createMultiple (99, 'star');
     this.stars.forEach (function (star) {
       star.body.gravity.y = 300;
@@ -269,7 +268,8 @@ var playState = {
     }, this);
 
     //add a timer that will make a new star every 300 milliseconds and place it randomonly on the screen
-    this.starsTimer = this.game.time.events.loop(1009, this.recycleStar, this);
+    //this game.time.events.loop returns a timer object
+    game.time.events.loop(1009, this.recycleStar, this);
 
     //make exploding Stars its own group
     this.explodingStars = this.game.add.group ();
@@ -296,6 +296,12 @@ var playState = {
     //add a timer that will add a new rock and place it randomly on the screen
     //in the recycleRock, function, subtract 1 from the lives variable
     this.rocks.createMultiple (20, 'rock');
+
+    this.rocks.forEach (function (rock) {
+      rock.body.gravity.y = 300;
+      rock.checkWorldBounds = true;
+      rock.outOfBoundsKill = true;
+    });
     this.rocksTimer = this.game.time.events.loop (30011, this.recycleRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
@@ -352,7 +358,12 @@ var playState = {
                                    this.lives += 1;
                                  }, null, this);
     game.physics.arcade.overlap (this.player, this.diamonds,  this.collectDiamond,  null, this);
-    game.physics.arcade.overlap (this.player, this.tempStars, this.collectTempStar, null, this);
+    //When the star hits the player, kill increase the score
+    game.physics.arcade.overlap (this.player, this.tempStars,
+                                 function (player, tempStar) {
+                                   tempStar.kill();
+                                   this.score += 10;
+                                 }, null, this);
     //let the player get punished or rewarded if he hits the rocket
     game.physics.arcade.overlap (this.player, this.rockets, this.collectRocket, null, this);
     this.topOfCamera = game.camera.y;
@@ -512,9 +523,6 @@ var playState = {
   recycleRock: function (rock) {
     rock = this.rocks.getFirstDead();
     rock.reset ( Math.floor (Math.random() * game.world.width ), this.topOfCamera);
-    rock.body.gravity.y = 300;
-    rock.checkWorldBounds = true;
-    rock.outOfBoundsKill = true;
   },
 
   recycleHeart: function (heart) {
@@ -554,12 +562,6 @@ var playState = {
     this.score += 10;
   },
 
-  //When the star hits the player, kill increase the score
-  collectTempStar: function (player, tempStar) {
-    tempStar.kill();
-    this.score += 10;
-  },
-
   collectDiamond: function (player, diamond) {
     diamond.kill();
     this.x = Math.floor (player.position.x);
@@ -587,7 +589,7 @@ var playState = {
   },
 
   //this makes stars fall from the top
-  recycleStar: function (timer) {
+  recycleStar: function (star) {
     var star = this.stars.getFirstDead ();
     if ( Math.floor( Math.random() * 2)) {
       star.reset (this.player.position.x + Math.random() * this.ledgeWidth / 2, this.topOfCamera);
@@ -619,6 +621,7 @@ var playState = {
     //  Move the ledge to the top of the screen again
     switch (this.ledgeXPosition [0]) {
     case "x0":
+      console.log("how many times have you seen me? 0");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x1, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
@@ -633,6 +636,7 @@ var playState = {
       }
       break;
     case "x1":
+      console.log("how many times have you seen me? 1");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x0, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
@@ -645,6 +649,7 @@ var playState = {
       }
       break;
     case "x2":
+      console.log("how many times have you seen me? 2");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x1, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
@@ -656,6 +661,7 @@ var playState = {
       }
       break;
     case "x3":
+      console.log("how many times have you seen me? 3");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x2, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
