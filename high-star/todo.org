@@ -1,4 +1,8 @@
-* make a the rocket be able to go back and forth on the ledges not just the x0 one
+these are all the things I want to get finished before I put the game on any app store
+* make the rockets work again
 * after a certain amount of time randomly make some of the ledges transparent after the player jumps on them
   this will mean that after the player jumps on a particular ledge, it disappears, and the player will fall
   through it if he tries to jump on it twice
+* delay the randomizing of the ledge's width by 5 minutes or so
+  after that 5 minutes then start randomizing the ledge's width
+* modify the putPlayerInWorld to put the player on the ledge that is just below half the width of the screen

@@ -102,7 +102,7 @@ var playState = {
     this.topOfCamera = game.camera.y;
     this.bottomOfCamera = game.camera.y + game.camera.height;
     var pkey = game.input.keyboard.addKey (Phaser.Keyboard.P);
-    //When the player plesses the p key, we call the start function
+    //When the player presses the p key, we call the start function
     pkey.onDown.add (this.pauseGame, this);
 
     // Set the physics system
@@ -151,11 +151,10 @@ var playState = {
     //how fast the player falls
     this.player.body.gravity.y = 600;
 
-    // the platforms group shall be any object that is not movable, and the player can stand on it.
+    // the platforms group shall be used for creating the ground
     this.platforms = game.add.group ();
     //enable physics for any object that is created in this group
     this.platforms.enableBody = true;
-
     this.ground = this.platforms.create (0, 100000 - 50, 'ground');
     //scale the ground properly
     this.ground.width = game.camera.width;
@@ -165,15 +164,16 @@ var playState = {
     //kill the ground after 50 seconds
     this.game.time.events.loop(50000, function (ground) {
       this.ground.kill();
+      this.platforms.destroy ();
     } , this);
 
     //create a ledges group
     this.ledgeWidth = 100;
     this.ledgeMaxWidth = Math.floor(game.camera.width / 4 - (10 * 5));
     this.ledges = this.game.add.group();
+    game.physics.arcade.enable (this.ledges);
     //add physics to the group
     this.ledges.enableBody = true;
-    game.physics.arcade.enable (this.ledges);
     //create 4 ledges
     this.ledges.createMultiple (4, 'ground');
     //place the ledges in the world
@@ -188,7 +188,6 @@ var playState = {
       }, this);
     }
     this.ledgeXPosition = ["x0", "x1", "x2", "x3"];
-    console.log(this.ledgeXPosition [0]);
 
     //create a rockets group
     this.rockets = this.game.add.group();
@@ -209,11 +208,11 @@ var playState = {
       }, this);
     }, this);
 
+    //wait .3 of a second before creating the first rocket
     game.time.events.add(300, function () {
       this.numberOfLedgesForNewRocket = Math.ceil(Math.random() * this.maxLedgesTilNewRocket);
       this.numberOfLedgesForNewRocket = 1;
-    },
-                         this);
+    }, this);
 
     //create an exploding rocket
     this.explodingRockets = this.game.add.group ();
@@ -227,10 +226,6 @@ var playState = {
       explodingRocket.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
     }, this);
 
-
-    //how fast the rocket falls
-
-    //Check to see if the player has left the world each frame, if he has then emit onOutOfBounds
     this.player.animations.add ('left', [0, 1, 2, 3], 10, true);
     this.player.animations.add ('right', [5, 6, 7, 8], 10, true);
 
@@ -273,17 +268,15 @@ var playState = {
     }, this);
 
     //make rocks its own group
-    this.rocks = this.game.add.group ();
+    this.rocks = game.add.group ();
     //enable physics for the group
     this.rocks.enableBody = true;
-
-    //add a timer that will add a new rock and place it randomly on the screen
     //in the recycleRock, function, subtract 1 from the lives variable
     this.rocks.createMultiple (20, 'rock');
-
     this.rocks.forEach (function (rock) {
       rock.body.gravity.y = 300;
     }, this);
+    //add a timer that will add a new rock and place it randomly on the screen
     this.rocksTimer = this.game.time.events.loop (30011, this.recycleRock, this);
 
     //make a hearts game.add, enableBody =true, and heartsTimer //help wanted
@@ -305,7 +298,9 @@ var playState = {
     }, this);
 
     this.scoreText = game.add.text (game.world.width - game.world.width * .99, 16, 'score:0', {fontSize: '32px', fill: '#000' });
+    this.scoreText.fixedToCamera = true;
     this.scoreLives = game.add.text (game.world.width - game.world.width * .1, 16, 'lives:5', {fontSize: '32px', fill: '#000' });
+    this.scoreLives.fixedToCamera = true;
 
   },
 
@@ -356,30 +351,13 @@ var playState = {
     game.physics.arcade.overlap (this.player, this.rockets, this.collectRocket, null, this);
     this.topOfCamera = game.camera.y;
     this.bottomOfCamera = game.camera.y + game.camera.height;
+    //if the player jumps higher than half way up the screen, then focus the camera on him
     if ((game.camera.y + (game.camera.height / 2)) > this.player.position.y) {
-      //if I fix this, then the game should work once again
       game.camera.focusOn(this.player);
     }
-    //add velocity for all alive ledges
-    this.ledges.forEachAlive (function ( ledge ) {
-      ledge.body.velocity.y = this.ledgeVelocity;
-      //kill the sprite if it is outside of the camera bounds
-      this.killSprite(ledge);
-    }, this, this);
-
-    this.tempStars.forEachAlive (
-      //Make all the falling tempStars fall right into the player
-      function ( tempStar ) {
-        tempStar.body.position.x = this.player.body.position.x;
-        //if the sprite falls outside of the view of the camera, kill it
-        this.killSprite (tempStar);
-      }, this);
-
-    //pausing stops the player from having gravity, so I need to add it in again
-    this.player.body.gravity.y = 600;
-    //If the player moves too far to the right or left, put him back in the world
-    //if the player falls below the camera, kill 'em
-    this.killSprite(this.player);
+    //if the player falls below the camera, put him back in the world
+    if (this.player.position.y > this.bottomOfCamera)
+      this.putPlayerInWorld(this.player);
     //dictate how the player moves
     this.player.body.velocity.x = 0;
     if (this.cursors.left.isDown) {
@@ -406,6 +384,20 @@ var playState = {
       this.player.body.velocity.y = 800;
     }
 
+    //Check to see if the player fell left outside of the world or right, if so, change his position
+    if ((this.player.position.x < 0) && (this.cursors.left.isDown))
+      this.player.position.x = game.camera.width;
+    //check to see if the player fell out of the right side of the world, if so change his position
+    if ((this.player.position.x > game.camera.width) && (this.cursors.right.isDown))
+      this.player.position.x = 0 - 32;
+
+    //add velocity for all alive ledges
+    this.ledges.forEachAlive (function ( ledge ) {
+      ledge.body.velocity.y = this.ledgeVelocity;
+      //kill the sprite if it is outside of the camera bounds
+      this.killSprite(ledge);
+    }, this, this);
+
     //make the ledges fall faster but not faster than 100 as time goes on
     if (this.ledgeVelocity < 100) {
       if (game.time.totalElapsedSeconds() > this.timeDivisibleBy) {
@@ -413,6 +405,25 @@ var playState = {
         this.timeDivisibleBy += 20;
       }
     }
+
+    //make the temp stars be above the player and kill 'em when they go beyond the camera view
+    this.tempStars.forEachAlive (
+      //Make all the falling tempStars fall right into the player
+      function ( tempStar ) {
+        tempStar.body.position.x = this.player.body.position.x;
+        //if the sprite falls outside of the view of the camera, kill it
+        this.killSprite (tempStar);
+      }, this);
+
+    //kill the star if it goes out of the camera view
+    this.stars.forEachAlive (function (star) {
+        this.killSprite (star);
+    }, this);
+
+    //kill the star if it goes out of the camera view
+    this.hearts.forEachAlive (function (heart) {
+        this.killSprite (heart);
+    }, this);
 
     //move the rocket forward and back on the ledge if it is in the world
     this.rockets.forEachAlive (function (rocket) {
@@ -470,7 +481,6 @@ var playState = {
 
   //This funcition is called anytime the player is out of bounds.
   //if the player has fallen below the world, it will take 1 life and respawn him
-  //if he is to the right of the world it will put him on the left and vice versa
   putPlayerInWorld: function (player) {
     //if the player is below the world, kill a life and respawn him
     if (player.position.y > this.bottomOfCamera) {
@@ -508,11 +518,6 @@ var playState = {
         alert ("Not 3 or 4 ledges are alive");
       }
       //if the player is to the left, put him on the right
-    } else if (player.position.x < 0 ) {
-      player.position.x = game.world.width;
-      //if the player is on the right, then put him on the left
-    } else if (player.position.x > game.world.width) {
-      player.position.x = 0;
     }
   },
 
@@ -522,6 +527,7 @@ var playState = {
   },
 
   recycleHeart: function (heart) {
+    heart = this.hearts.getFirstDead();
     if ( Math.floor( Math.random() * 2)) {
       heart.reset ( Math.floor (this.player.position.x) + this.ledgeWidth * Math.random() / 2, this.topOfCamera);
     } else {
@@ -593,8 +599,6 @@ var playState = {
       star.reset (this.player.position.x - Math.random() * this.ledgeWidth / 2, this.topOfCamera);
     }
     star.body.gravity.y = 300;
-    star.checkWorldBounds = true;
-    star.outOfBoundsKill = true;
   },
 
   //This is the function that is called when the player hits a diamond
