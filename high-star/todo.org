@@ -6,3 +6,4 @@ these are all the things I want to get finished before I put the game on any app
 * delay the randomizing of the ledge's width by 5 minutes or so
   after that 5 minutes then start randomizing the ledge's width
 * modify the putPlayerInWorld to put the player on the ledge that is just below half the width of the screen
+* on pause, draw the fullscreen button again and add a quit option (this will be helpful for mobile users)

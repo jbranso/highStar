@@ -133,15 +133,16 @@ var playState = {
     // this.sky.height = this.game.camera.view.height;
     game.stage.backgroundColor = "#87CEEB";
 
+    //make the background pretty
     // var out = [];
-    // var bmd = game.add.bitmapData(game.world.width, game.world.height);
+    // var bmd = game.add.bitmapData(game.camera.width, game.camera.height);
     // bmd.addToWorld();
     // var y = 0;
-    // for (var i = 0; i < game.world.height / 2; i++)
+    // for (var i = 0; i < game.camera.height / 2; i++)
     // {
-    //   var c = Phaser.Color.interpolateColor(0x009acd, 0x87ceeb, game.world.height / 2, i);
+    //   var c = Phaser.Color.interpolateColor(0x009acd, 0x87ceeb, game.camera.height / 2, i);
     //   // console.log(Phaser.Color.getWebRGB(c));
-    //   bmd.rect(0, y, game.world.width, game.world.height, Phaser.Color.getWebRGB(c));
+    //   bmd.rect(0, y, game.camera.width, game.camera.height, Phaser.Color.getWebRGB(c));
     //   out.push(Phaser.Color.getWebRGB(c));
     //   y += 2;
     // }
@@ -187,7 +188,7 @@ var playState = {
         ledge.events.onKilled.add (this.recycleLedge, this);
       }, this);
     }
-    this.ledgeXPosition = ["x0", "x1", "x2", "x3"];
+    this.ledgeXPosition = [this.x0, this.x1, this.x2, this.x3];
 
     //create a rockets group
     this.rockets = this.game.add.group();
@@ -223,7 +224,7 @@ var playState = {
     this.explodingRockets.createMultiple (10, 'explodingRocket');
     this.explodingRockets.forEach (function (explodingRocket) {
       explodingRocket.body.gravity = 200;
-      explodingRocket.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
+      explodingRocket.animations.add ('explode', [0, 1, 2, 3, 4], 30, false);
     }, this);
 
     this.player.animations.add ('left', [0, 1, 2, 3], 10, true);
@@ -264,7 +265,7 @@ var playState = {
     //add gravity to all of the exploding stars
     this.explodingStars.forEach (function (explodingStar) {
       explodingStar.body.gravity.y = 300;
-      explodingStar.animations.add ('explode', [0, 1, 2, 3, 4], 15, false);
+      explodingStar.animations.add ('explode', [0, 1, 2, 3, 4, 5], 30, false);
     }, this);
 
     //make rocks its own group
@@ -312,10 +313,7 @@ var playState = {
   },
 
   update: function () {
-    //I can make the camera move up the screen, but it messes with stuff
-    //game.camera.y -= 1;
-    // if(userClicksRestart() || (lives == 0)){ // Check to see the game needs restarting
-    //if the user has lost all of his lives...
+
     if ( this.lives == 0) {
       this.state.start ('lose');
     }
@@ -417,28 +415,28 @@ var playState = {
 
     //kill the star if it goes out of the camera view
     this.stars.forEachAlive (function (star) {
-        this.killSprite (star);
+      this.killSprite (star);
     }, this);
 
     //kill the star if it goes out of the camera view
     this.hearts.forEachAlive (function (heart) {
-        this.killSprite (heart);
+      this.killSprite (heart);
     }, this);
 
     //move the rocket forward and back on the ledge if it is in the world
     this.rockets.forEachAlive (function (rocket) {
       var x = null;
       switch (rocket.ledgeXPosition) {
-      case "x0":
+      case this.x0:
         x = 0;
         break;
-      case "x1":
+      case this.x1:
         x = this.x1;
         break;
-      case "x2":
+      case this.x2:
         x = this.x2;
         break;
-      case "x3":
+      case this.x3:
         x = this.x3;
         break;
       default:
@@ -473,14 +471,18 @@ var playState = {
     //if the sprite is above or below the top of the camera, kill it
     if ((sprite.position.y < this.topOfCamera) || (sprite.position.y > this.bottomOfCamera)) {
       sprite.kill();
-    //if the sprite is a ledge, then randomly set it's width to a random value
-    if (sprite.key == "ground")
-      sprite.width = Math.floor((this.ledgeMaxWidth - 50) * Math.random() + 50);
+      //if the sprite is a ledge, then randomly set it's width to a random value
+      if (sprite.key == "ground")
+        sprite.width = Math.floor((this.ledgeMaxWidth - 50) * Math.random() + 50);
     }
   },
 
   //This funcition is called anytime the player is out of bounds.
   //if the player has fallen below the world, it will take 1 life and respawn him
+  //The camera follows the player as he goes up in the world. Therefore, if he respawns on the top ledge, then
+  //immediately recycleLedge will be called at least twice, and recycle 2 ledges at the top position
+  //this not only looks bad but it stops the user from playing the game.
+  //So when the player is respawned, he needs to be put at the highest ledge just below halfway of the screen
   putPlayerInWorld: function (player) {
     //if the player is below the world, kill a life and respawn him
     if (player.position.y > this.bottomOfCamera) {
@@ -493,27 +495,34 @@ var playState = {
       var largestX = Math.max.apply(Math, xArray);
       //the y axis starts at 0 at the top of the screen.  so y == roughly 1000 is the bottom of the screen. Therefore we are
       //interested in the lowest value of any living edge. This means the ledge is close to the top of the screen
-      var minimumY = Math.min.apply(Math, yArray);
-      //If there are 3 ledges then put him on the highest ledge this is very unlikely to ever happen. Most likely when the player
+      var maximumY = Math.max.apply(Math, yArray);
+      //If there are 3 ledges then put him on the lowest ledge this is very unlikely to ever happen. Most likely when the player
       //dies there will exist 4 ledges on the screen
       if (living == 3) {
-        this.player.position.x = largestX;
-        this.player.position.y = minimumY;
+        this.player.position.y = maximumY;
+        //what is the x position of the lowest ledge?  Set the player's X position to that
+        for(var i = 0; i <= 3; i++) {
+          if (this.ledges.children[i].position.y == maximumY)
+            this.player.position.x = this.ledges.children[i].position.x + 40;
+        }
         //if there are 4 ledges, put him on the 3rd ledge
       } else if (living == 4) {
-        //this is also very unlikely to happen. most likely the player will not die when the highest ledge is at the top of the screen
-        if (minimumY == 0) {
-          this.player.position.x = this.ledges.children[3].position.x + 50;
-          this.player.position.y = this.ledges.children[3].position.y;
-          //this bit of code will probably be executed every time the player falls out of the screen
-        } else {
-          this.player.position.y = minimumY - 80;
-          //what is the x position of the highest ledge?
-          for(var i = 0; i <= 3; i++) {
-            if (this.ledges.children[i].position.y == minimumY)
-              this.player.position.x = this.ledges.children[i].position.x + 40;
-          }
-        }
+        var ledge = this.ledges.filter (function (child, index, children) {
+          //find the child who's X position is equal to this.ledgeXPosition[0];
+          if (child.position.x == playState.ledgeXPosition [2] )
+            return child;
+          else
+            return children[3];
+        });
+        this.player.position.y = ledge.position.y;
+        this.player.position.x = ledge.position.x;
+
+        // this.player.position.y = maximumY - 80;
+        // //what is the x position of the lowest ledge?  Set the player's X position to that
+        // for(var i = 0; i <= 3; i++) {
+        //   if (this.ledges.children[i].position.y == maximumY)
+        //     this.player.position.x = this.ledges.children[i].position.x + 40;
+        // }
       } else {
         alert ("Not 3 or 4 ledges are alive");
       }
@@ -553,7 +562,7 @@ var playState = {
   //When the star hits the player, kill increase the score
   collectStar: function (player, star) {
     var x = star.position.x - 5;
-    var y = star.position.y - 5;
+    var y = star.position.y - 6;
     var yVelocity = star.body.velocity.y;
     star.kill();
     //this.explodingStar.alive = true;
@@ -576,7 +585,7 @@ var playState = {
     //if the player landed on top of the rocket, make the rocket disappear and give the player some points
     if (player.body.touching.down && !player.body.touching.left && !player.body.touching.right) {
       var x = rocket.position.x - 5;
-      var y = rocket.position.y - 5;
+      var y = rocket.position.y - 6;
       //kill the rocket so it can be reused
       rocket.kill();
       var explodingRocket = this.explodingRockets.getFirstDead();
@@ -620,56 +629,56 @@ var playState = {
   recycleLedge: function (ledge) {
     //  Move the ledge to the top of the screen again
     switch (this.ledgeXPosition [0]) {
-    case "x0":
+    case this.x0:
       console.log("how many times have you seen me? 0");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x1, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
         //make the first element of the array the reset ledge, because that ledge is the highest now.
-        this.ledgeXPosition.unshift( "x1");
+        this.ledgeXPosition.unshift(this.x1);
       } else {
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift ("x3");
+        this.ledgeXPosition.unshift (this.x3);
         ledge.reset(this.x3, this.topOfCamera);
       }
       break;
-    case "x1":
+    case this.x1:
       console.log("how many times have you seen me? 1");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x0, this.topOfCamera);
         //delete the last element of the array. It's no longer on the screen
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x0");
+        this.ledgeXPosition.unshift(this.x0);
       } else {
         ledge.reset(this.x2, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x2");
+        this.ledgeXPosition.unshift(this.x2);
       }
       break;
-    case "x2":
+    case this.x2:
       console.log("how many times have you seen me? 2");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x1, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x1");
+        this.ledgeXPosition.unshift(this.x1);
       } else {
         ledge.reset(this.x3, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x3");
+        this.ledgeXPosition.unshift(this.x3);
       }
       break;
-    case "x3":
+    case this.x3:
       console.log("how many times have you seen me? 3");
       if (Math.floor ( Math.random() * 2)) {
         ledge.reset(this.x2, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x2");
+        this.ledgeXPosition.unshift(this.x2);
       } else {
         ledge.reset(this.x0, this.topOfCamera);
         this.ledgeXPosition.splice(3, 1);
-        this.ledgeXPosition.unshift("x0");
+        this.ledgeXPosition.unshift(this.x0);
       }
       break;
     default:
@@ -683,20 +692,20 @@ var playState = {
       //what's the position of the upper ledge?
       switch (this.ledgeXPosition [0]) {
         //if it's far left, do this stuff
-      case "x0":
-        this.rockets.getFirstDead ().ledgeXPosition = "x0";
+      case this.x0:
+        this.rockets.getFirstDead ().ledgeXPosition = this.x0;
         this.rockets.getFirstDead ().reset (this.x0, this.y0 - 10);
         break;
-      case "x1":
-        this.rockets.getFirstDead ().ledgeXPosition = "x1";
+      case this.x1:
+        this.rockets.getFirstDead ().ledgeXPosition = this.x1;
         this.rockets.getFirstDead ().reset (this.x1, this.y1 - 10);
         break;
-      case "x2":
-        this.rockets.getFirstDead ().ledgeXPosition = "x2";
+      case this.x2:
+        this.rockets.getFirstDead ().ledgeXPosition = this.x2;
         this.rockets.getFirstDead ().reset (this.x2, this.y2 - 10);
         break;
-      case "x3":
-        this.rockets.getFirstDead ().ledgeXPosition = "x3";
+      case this.x3:
+        this.rockets.getFirstDead ().ledgeXPosition = this.x3;
         this.rockets.getFirstDead ().reset (this.x3, this.y3 - 10);
         break;
       }
